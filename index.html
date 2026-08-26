@@ -24,115 +24,25 @@
   </header>
 
   <main>
-    <section class="intro">
-      <div>
-        <p class="eyebrow">CASE MANAGEMENT · GENOGRAM</p>
-        <h1>아동부터 입력하면,<br><span>가계도가 바로 완성됩니다.</span></h1>
-      </div>
-      <p class="intro-copy">아동과 부모·보호자의 핵심 정보, 혼인 상태를 한 번에 입력하세요. 관계선까지 자동으로 그린 뒤 필요한 부분만 수정하면 됩니다.</p>
-    </section>
-
+    <section class="intro"><div><p class="eyebrow">CASE MANAGEMENT · GENOGRAM</p><h1>아동부터 입력하면,<br><span>가계도가 바로 완성됩니다.</span></h1></div><p class="intro-copy">아동과 부모·보호자의 핵심 정보, 혼인 상태를 한 번에 입력하세요. 관계선까지 자동으로 그린 뒤 필요한 부분만 수정하면 됩니다.</p></section>
     <section class="workspace">
       <aside class="sidebar">
         <div class="mode-tabs" role="tablist"><button type="button" class="mode-tab active" data-panel="quickPanel" aria-selected="true">빠른 작성</button><button type="button" class="mode-tab" data-panel="editPanel" aria-selected="false">세부 편집</button></div>
-        <div id="quickPanel" class="side-panel active">
-          <form id="quickForm">
-            <section class="quick-section focus"><div class="quick-title"><span>1</span><div><strong>아동</strong><small>가계도의 중심입니다</small></div></div>
-              <div class="quick-grid"><label><span>식별명 <em>필수</em></span><input id="qChildName" required value="대상아동" maxlength="20"></label><label><span>나이·출생연도</span><input id="qChildAge" placeholder="예: 12세"></label></div>
-              <div class="quick-gender"><label><input type="radio" name="qChildGender" value="male" checked><span>□ 남아</span></label><label><input type="radio" name="qChildGender" value="female"><span>○ 여아</span></label><label><input type="radio" name="qChildGender" value="unknown"><span>◇ 미상</span></label></div>
-            </section>
-            <section class="quick-section"><div class="quick-title"><span>2</span><div><strong>부모·보호자</strong><small>없는 구성원은 체크를 해제하세요</small></div></div>
-              <div class="parent-block"><label class="check-head"><input type="checkbox" id="qHasFather" checked><b>부 등록</b></label><div class="quick-grid"><input id="qFatherName" value="부" aria-label="부 식별명"><input id="qFatherAge" placeholder="나이·출생연도" aria-label="부 나이"></div><label class="inline-check"><input type="checkbox" id="qFatherCohabit" checked> 아동과 동거</label></div>
-              <div class="parent-block"><label class="check-head"><input type="checkbox" id="qHasMother" checked><b>모 등록</b></label><div class="quick-grid"><input id="qMotherName" value="모" aria-label="모 식별명"><input id="qMotherAge" placeholder="나이·출생연도" aria-label="모 나이"></div><label class="inline-check"><input type="checkbox" id="qMotherCohabit" checked> 아동과 동거</label></div>
-            </section>
-            <section class="quick-section"><div class="quick-title"><span>3</span><div><strong>가족 상태</strong><small>부모 두 명을 등록할 때 표시됩니다</small></div></div>
-              <label class="quick-label"><span>부모 관계</span><select id="qParentStatus"><option value="marriage">혼인·부부</option><option value="separated">별거</option><option value="divorced">이혼</option><option value="distant">관계 불명확·미상</option><option value="none">관계선 표시 안 함</option></select></label>
-            </section>
-            <section class="quick-section"><div class="quick-title"><span>4</span><div><strong>추가 가족</strong><small>조부모·형제자매·보호자를 자유롭게 등록하세요</small></div></div>
-              <div id="quickExtraList" class="extra-list"></div>
-              <button type="button" class="add-extra" id="addExtraBtn">＋ 가족 구성원 추가</button>
-            </section>
-            <button class="quick-create" type="submit"><span>가계도 바로 만들기</span><b>→</b></button>
-            <p class="replace-note">현재 가계도가 있으면 빠른 작성 내용으로 교체됩니다.</p>
-          </form>
-        </div>
-        <div id="editPanel" class="side-panel">
-          <div class="step-head"><span>+</span><div><strong>구성원과 관계 편집</strong><small>자동 생성 후 필요한 부분만 고치세요</small></div></div>
-          <button class="add-person" id="addPersonBtn"><span>＋</span> 구성원 추가</button>
-          <div id="peopleList" class="people-list"></div>
-          <div class="relation-list-head"><strong>연결선</strong><small>각 선을 바로 삭제할 수 있습니다</small></div>
-          <div id="relationshipList" class="relationship-list"></div>
-          <button type="button" class="clear-diagram" id="clearDiagramBtn">전체 구조 삭제</button>
-        </div>
+        <div id="quickPanel" class="side-panel active"><form id="quickForm"></form></div>
+        <div id="editPanel" class="side-panel"><div class="step-head"><span>+</span><div><strong>구성원과 관계 편집</strong><small>자동 생성 후 필요한 부분만 고치세요</small></div></div><button class="add-person" id="addPersonBtn"><span>＋</span> 구성원 추가</button><div id="peopleList" class="people-list"></div><div class="relation-list-head"><strong>연결선</strong><small>각 선을 바로 삭제할 수 있습니다</small></div><div id="relationshipList" class="relationship-list"></div><button type="button" class="clear-diagram" id="clearDiagramBtn">전체 구조 삭제</button></div>
         <div class="privacy-note"><strong>개인정보 보호</strong><p>입력 내용은 서버로 전송되지 않고 현재 브라우저에서만 처리됩니다. 실명 대신 식별명을 권장합니다.</p></div>
       </aside>
-
       <section class="canvas-panel">
-        <div class="canvas-toolbar">
-          <div class="step-head compact"><span>02</span><div><strong>가계도 편집</strong><small>인물을 끌어 배치하고 관계를 연결하세요</small></div></div>
-          <div class="tool-actions">
-            <button class="button soft" id="canvasAddBtn">＋ 구성원 추가</button>
-            <button class="button soft" id="relationBtn">⌁ 선 연결</button>
-            <button class="button ghost danger" id="deleteLineBtn">선 삭제</button>
-            <button class="icon-button" id="zoomOutBtn" aria-label="축소">−</button>
-            <span id="zoomLabel" class="zoom-label">100%</span>
-            <button class="icon-button" id="zoomInBtn" aria-label="확대">＋</button>
-            <button class="icon-button" id="fitBtn" aria-label="화면 맞춤">⌂</button>
-          </div>
-        </div>
+        <div class="canvas-toolbar"><div class="step-head compact"><span>02</span><div><strong>가계도 편집</strong><small>인물을 끌어 배치하고 관계를 연결하세요</small></div></div><div class="tool-actions"><button class="button soft" id="canvasAddBtn">＋ 구성원 추가</button><button class="button soft" id="relationBtn">⌁ 선 연결</button><button class="button ghost danger" id="deleteLineBtn">선 삭제</button><button class="icon-button" id="zoomOutBtn" aria-label="축소">−</button><span id="zoomLabel" class="zoom-label">100%</span><button class="icon-button" id="zoomInBtn" aria-label="확대">＋</button><button class="icon-button" id="fitBtn" aria-label="화면 맞춤">⌂</button></div></div>
         <div id="connectionBar" class="connection-bar" hidden><div class="connection-copy"><b id="connectionGuide">첫 번째 구성원을 선택하세요</b><small>두 구성원을 선택한 다음 연결선 종류를 정합니다.</small></div><button type="button" id="cancelConnectBtn">연결 취소</button></div>
-        <div class="canvas-wrap" id="canvasWrap">
-          <svg id="genogram" viewBox="0 0 1200 720" role="img" aria-label="편집 가능한 가족 가계도">
-            <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#eadde0" stroke-width="1"/></pattern></defs>
-            <rect width="1200" height="720" fill="#fffdfd"/><rect class="canvas-grid" width="1200" height="720" fill="url(#grid)"/>
-            <g id="relationLayer"></g><g id="nodeLayer"></g>
-          </svg>
-          <div id="emptyState" class="empty-state"><div class="empty-symbol"><span></span><i></i><b></b></div><strong>왼쪽 정보만 입력하면 바로 그려집니다</strong><p>아동·부모 정보와 가족 상태를 한 번에 입력하세요.</p><button class="button primary" id="emptyAddBtn">빠른 작성 시작</button></div>
-        </div>
+        <div class="canvas-wrap" id="canvasWrap"><svg id="genogram" viewBox="0 0 1200 720" role="img" aria-label="편집 가능한 가족 가계도"><defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#eadde0" stroke-width="1"/></pattern></defs><rect width="1200" height="720" fill="#fffdfd"/><rect class="canvas-grid" width="1200" height="720" fill="url(#grid)"/><g id="relationLayer"></g><g id="nodeLayer"></g></svg><div id="emptyState" class="empty-state"><div class="empty-symbol"><span></span><i></i><b></b></div><strong>왼쪽 정보만 입력하면 바로 그려집니다</strong><p>아동·부모 정보와 가족 상태를 한 번에 입력하세요.</p><button class="button primary" id="emptyAddBtn">빠른 작성 시작</button></div></div>
         <div class="legend"><b>기호</b><span><i class="male"></i>남성</span><span><i class="female"></i>여성</span><span><i class="double"></i>대상자</span><span><i class="dead">×</i>사망</span><span><i class="conflict"></i>갈등</span></div>
       </section>
     </section>
   </main>
-
-  <dialog id="personDialog">
-    <form method="dialog" id="personForm">
-      <div class="dialog-head"><div><p class="eyebrow">FAMILY MEMBER</p><h2 id="personDialogTitle">구성원 추가</h2></div><button type="button" class="dialog-close" data-close="person" aria-label="닫기">×</button></div>
-      <input type="hidden" id="personId">
-      <div class="form-grid">
-        <label><span>이름 또는 식별명 <em>필수</em></span><input id="personName" required maxlength="20" placeholder="예: 대상자, 부, 김○○"></label>
-        <label><span>대상자와의 관계 <em>필수</em></span><select id="personRole" required><option value="대상자">대상자</option><option>배우자</option><option>부</option><option>모</option><option>자녀</option><option>형제·자매</option><option>조부</option><option>조모</option><option>기타 친척</option><option>보호자·동거인</option></select></label>
-        <fieldset><legend>성별 <em>필수</em></legend><div class="segmented"><label><input type="radio" name="gender" value="male" checked><span>□ 남성</span></label><label><input type="radio" name="gender" value="female"><span>○ 여성</span></label><label><input type="radio" name="gender" value="unknown"><span>◇ 미상</span></label></div></fieldset>
-        <label><span>나이 또는 출생연도</span><input id="personAge" maxlength="12" placeholder="예: 42세 / 1984년"></label>
-        <label><span>생존 상태</span><select id="personLife"><option value="alive">생존</option><option value="dead">사망</option><option value="unknown">미상</option></select></label>
-        <label><span>동거 여부</span><select id="personCohabit"><option value="yes">동거</option><option value="no">비동거</option><option value="unknown">미상</option></select></label>
-        <label class="full"><span>사례 이해에 필요한 메모 <small>선택</small></span><textarea id="personNote" maxlength="80" placeholder="확인된 사실만 간단히 기록하세요"></textarea></label>
-      </div>
-      <div class="dialog-actions"><button type="button" class="button ghost" data-close="person">취소</button><button type="submit" class="button primary">저장하기</button></div>
-    </form>
-  </dialog>
-
-  <dialog id="relationDialog">
-    <form method="dialog" id="relationForm">
-      <div class="dialog-head"><div><p class="eyebrow">RELATIONSHIP</p><h2>관계 연결</h2></div><button type="button" class="dialog-close" data-close="relation" aria-label="닫기">×</button></div>
-      <div class="form-grid"><label><span>시작 구성원</span><select id="fromPerson" required></select></label><label><span>연결할 구성원</span><select id="toPerson" required></select></label><label class="full"><span>연결선 선택</span><select id="relationType"><option value="marriage">실선 · 부부/동반자</option><option value="parent">하위 분류선 · 부모→자녀</option><option value="separated">분리선 1개 · 별거</option><option value="divorced">분리선 2개 · 이혼</option><option value="distant">점선 · 소원/불명확</option><option value="close">굵은선 · 친밀/지지</option><option value="conflict">지그재그 · 갈등/적대</option></select></label></div>
-      <div class="dialog-actions"><button type="button" class="button ghost" data-close="relation">취소</button><button type="submit" class="button primary">연결하기</button></div>
-    </form>
-  </dialog>
-  <dialog id="lineChoiceDialog">
-    <form method="dialog" id="lineChoiceForm">
-      <div class="dialog-head"><div><p class="eyebrow">CONNECT PEOPLE</p><h2>어떤 관계로 연결할까요?</h2><p id="selectedPair" class="selected-pair"></p></div><button type="button" class="dialog-close" id="closeLineChoice" aria-label="닫기">×</button></div>
-      <div class="line-choice-grid">
-        <label><input type="radio" name="popupRelationType" value="marriage" checked><span><b>실선</b><small>부부·동반자</small></span></label>
-        <label><input type="radio" name="popupRelationType" value="parent"><span><b>부모 → 자녀</b><small>하위 가족구조</small></span></label>
-        <label><input type="radio" name="popupRelationType" value="separated"><span><b>별거</b><small>분리선 1개</small></span></label>
-        <label><input type="radio" name="popupRelationType" value="divorced"><span><b>이혼</b><small>분리선 2개</small></span></label>
-        <label><input type="radio" name="popupRelationType" value="distant"><span><b>점선</b><small>소원·불명확</small></span></label>
-        <label><input type="radio" name="popupRelationType" value="close"><span><b>굵은선</b><small>친밀·지지</small></span></label>
-        <label><input type="radio" name="popupRelationType" value="conflict"><span><b>지그재그</b><small>갈등·적대</small></span></label>
-      </div>
-      <div class="dialog-actions"><button type="button" class="button ghost" id="cancelLineChoice">취소</button><button type="submit" class="button primary">연결하기</button></div>
-    </form>
-  </dialog>
+  <dialog id="personDialog"><form method="dialog" id="personForm"><div class="dialog-head"><div><p class="eyebrow">FAMILY MEMBER</p><h2 id="personDialogTitle">구성원 추가</h2></div><button type="button" class="dialog-close" data-close="person" aria-label="닫기">×</button></div><input type="hidden" id="personId"><div class="form-grid"><label><span>이름 또는 식별명 <em>필수</em></span><input id="personName" required maxlength="20" placeholder="예: 대상자, 부, 김○○"></label><label><span>대상자와의 관계 <em>필수</em></span><select id="personRole" required><option value="대상자">대상자</option><option>배우자</option><option>부</option><option>모</option><option>자녀</option><option>형제·자매</option><option>조부</option><option>조모</option><option>기타 친척</option><option>보호자·동거인</option></select></label><fieldset><legend>성별 <em>필수</em></legend><div class="segmented"><label><input type="radio" name="gender" value="male" checked><span>□ 남성</span></label><label><input type="radio" name="gender" value="female"><span>○ 여성</span></label><label><input type="radio" name="gender" value="unknown"><span>◇ 미상</span></label></div></fieldset><label><span>나이 또는 출생연도</span><input id="personAge" maxlength="12" placeholder="예: 42세 / 1984년"></label><label><span>생존 상태</span><select id="personLife"><option value="alive">생존</option><option value="dead">사망</option><option value="unknown">미상</option></select></label><label><span>동거 여부</span><select id="personCohabit"><option value="yes">동거</option><option value="no">비동거</option><option value="unknown">미상</option></select></label><label class="full"><span>사례 이해에 필요한 메모 <small>선택</small></span><textarea id="personNote" maxlength="80" placeholder="확인된 사실만 간단히 기록하세요"></textarea></label></div><div class="dialog-actions"><button type="button" class="button ghost" data-close="person">취소</button><button type="submit" class="button primary">저장하기</button></div></form></dialog>
+  <dialog id="relationDialog"><form method="dialog" id="relationForm"><div class="dialog-head"><div><p class="eyebrow">RELATIONSHIP</p><h2>관계 연결</h2></div><button type="button" class="dialog-close" data-close="relation" aria-label="닫기">×</button></div><div class="form-grid"><label><span>시작 구성원</span><select id="fromPerson" required></select></label><label><span>연결할 구성원</span><select id="toPerson" required></select></label><label class="full"><span>연결선 선택</span><select id="relationType"><option value="marriage">실선 · 부부/동반자</option><option value="parent">하위 분류선 · 부모→자녀</option><option value="separated">분리선 1개 · 별거</option><option value="divorced">분리선 2개 · 이혼</option><option value="distant">점선 · 소원/불명확</option><option value="close">굵은선 · 친밀/지지</option><option value="conflict">지그재그 · 갈등/적대</option></select></label></div><div class="dialog-actions"><button type="button" class="button ghost" data-close="relation">취소</button><button type="submit" class="button primary">연결하기</button></div></form></dialog>
+  <dialog id="lineChoiceDialog"><form method="dialog" id="lineChoiceForm"><div class="dialog-head"><div><p class="eyebrow">CONNECT PEOPLE</p><h2>어떤 관계로 연결할까요?</h2><p id="selectedPair" class="selected-pair"></p></div><button type="button" class="dialog-close" id="closeLineChoice" aria-label="닫기">×</button></div><div class="line-choice-grid"><label><input type="radio" name="popupRelationType" value="marriage" checked><span><b>실선</b><small>부부·동반자</small></span></label><label><input type="radio" name="popupRelationType" value="parent"><span><b>부모 → 자녀</b><small>하위 가족구조</small></span></label><label><input type="radio" name="popupRelationType" value="separated"><span><b>분리선 1개</b><small>별거</small></span></label><label><input type="radio" name="popupRelationType" value="divorced"><span><b>분리선 2개</b><small>이혼</small></span></label><label><input type="radio" name="popupRelationType" value="distant"><span><b>점선</b><small>소원·불명확</small></span></label><label><input type="radio" name="popupRelationType" value="close"><span><b>굵은선</b><small>친밀·지지</small></span></label><label><input type="radio" name="popupRelationType" value="conflict"><span><b>지그재그</b><small>갈등·적대</small></span></label></div><div class="dialog-actions"><button type="button" class="button ghost" id="cancelLineChoice">취소</button><button type="submit" class="button primary">연결하기</button></div></form></dialog>
   <div id="toast" class="toast" role="status"></div>
   <script src="app.js"></script>
   <script src="fixes.js"></script>
@@ -140,5 +50,6 @@
   <script src="family-relation-ui-v3.js"></script>
   <script src="family-build-v4.js"></script>
   <script src="family-layout-v2.js"></script>
+  <script src="quick-reset-v1.js"></script>
 </body>
 </html>
