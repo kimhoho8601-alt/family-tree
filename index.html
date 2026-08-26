@@ -72,13 +72,15 @@
           <div class="step-head compact"><span>02</span><div><strong>가계도 편집</strong><small>인물을 끌어 배치하고 관계를 연결하세요</small></div></div>
           <div class="tool-actions">
             <button class="button soft" id="canvasAddBtn">＋ 구성원 추가</button>
-            <button class="button soft" id="relationBtn">관계 연결</button>
+            <button class="button soft" id="relationBtn">⌁ 선 연결</button>
+            <button class="button ghost danger" id="deleteLineBtn">선 삭제</button>
             <button class="icon-button" id="zoomOutBtn" aria-label="축소">−</button>
             <span id="zoomLabel" class="zoom-label">100%</span>
             <button class="icon-button" id="zoomInBtn" aria-label="확대">＋</button>
             <button class="icon-button" id="fitBtn" aria-label="화면 맞춤">⌂</button>
           </div>
         </div>
+        <div id="connectionBar" class="connection-bar" hidden><div><b id="connectionGuide">첫 번째 구성원을 선택하세요</b><small>구성원 두 명을 차례로 누르면 연결됩니다.</small></div><select id="quickRelationType" aria-label="연결선 종류"><option value="marriage">실선 · 부부/동반자</option><option value="parent">하위 분류선 · 부모→자녀</option><option value="separated">분리선 · 별거</option><option value="divorced">이중 분리선 · 이혼</option><option value="distant">점선 · 소원/불명확</option><option value="close">굵은선 · 친밀/지지</option><option value="conflict">지그재그 · 갈등/적대</option></select><button type="button" id="cancelConnectBtn">취소</button></div>
         <div class="canvas-wrap" id="canvasWrap">
           <svg id="genogram" viewBox="0 0 1200 720" role="img" aria-label="편집 가능한 가족 가계도">
             <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#eadde0" stroke-width="1"/></pattern></defs>
