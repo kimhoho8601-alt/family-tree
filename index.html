@@ -31,7 +31,7 @@
 
     <section class="workspace">
       <aside class="sidebar">
-        <div class="mode-tabs" role="tablist"><button class="mode-tab active" data-panel="quickPanel">빠른 작성</button><button class="mode-tab" data-panel="editPanel">세부 편집</button></div>
+        <div class="mode-tabs" role="tablist"><button type="button" class="mode-tab active" data-panel="quickPanel" aria-selected="true">빠른 작성</button><button type="button" class="mode-tab" data-panel="editPanel" aria-selected="false">세부 편집</button></div>
         <div id="quickPanel" class="side-panel active">
           <form id="quickForm">
             <section class="quick-section focus"><div class="quick-title"><span>1</span><div><strong>아동</strong><small>가계도의 중심입니다</small></div></div>
@@ -44,7 +44,10 @@
             </section>
             <section class="quick-section"><div class="quick-title"><span>3</span><div><strong>가족 상태</strong><small>부모 두 명을 등록할 때 표시됩니다</small></div></div>
               <label class="quick-label"><span>부모 관계</span><select id="qParentStatus"><option value="marriage">혼인·부부</option><option value="separated">별거</option><option value="divorced">이혼</option><option value="distant">관계 불명확·미상</option><option value="none">관계선 표시 안 함</option></select></label>
-              <label class="quick-label"><span>형제·자매 수</span><select id="qSiblingCount"><option value="0">없음·미상</option><option value="1">1명</option><option value="2">2명</option><option value="3">3명</option><option value="4">4명</option></select></label>
+            </section>
+            <section class="quick-section"><div class="quick-title"><span>4</span><div><strong>추가 가족</strong><small>조부모·형제자매·보호자를 자유롭게 등록하세요</small></div></div>
+              <div id="quickExtraList" class="extra-list"></div>
+              <button type="button" class="add-extra" id="addExtraBtn">＋ 가족 구성원 추가</button>
             </section>
             <button class="quick-create" type="submit"><span>가계도 바로 만들기</span><b>→</b></button>
             <p class="replace-note">현재 가계도가 있으면 빠른 작성 내용으로 교체됩니다.</p>
@@ -62,6 +65,7 @@
         <div class="canvas-toolbar">
           <div class="step-head compact"><span>02</span><div><strong>가계도 편집</strong><small>인물을 끌어 배치하고 관계를 연결하세요</small></div></div>
           <div class="tool-actions">
+            <button class="button soft" id="canvasAddBtn">＋ 구성원 추가</button>
             <button class="button soft" id="relationBtn">관계 연결</button>
             <button class="icon-button" id="zoomOutBtn" aria-label="축소">−</button>
             <span id="zoomLabel" class="zoom-label">100%</span>
