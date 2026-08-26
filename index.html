@@ -60,6 +60,9 @@
           <div class="step-head"><span>+</span><div><strong>구성원과 관계 편집</strong><small>자동 생성 후 필요한 부분만 고치세요</small></div></div>
           <button class="add-person" id="addPersonBtn"><span>＋</span> 구성원 추가</button>
           <div id="peopleList" class="people-list"></div>
+          <div class="relation-list-head"><strong>연결선</strong><small>각 선을 바로 삭제할 수 있습니다</small></div>
+          <div id="relationshipList" class="relationship-list"></div>
+          <button type="button" class="clear-diagram" id="clearDiagramBtn">전체 구조 삭제</button>
         </div>
         <div class="privacy-note"><strong>개인정보 보호</strong><p>입력 내용은 서버로 전송되지 않고 현재 브라우저에서만 처리됩니다. 실명 대신 식별명을 권장합니다.</p></div>
       </aside>
@@ -109,7 +112,7 @@
   <dialog id="relationDialog">
     <form method="dialog" id="relationForm">
       <div class="dialog-head"><div><p class="eyebrow">RELATIONSHIP</p><h2>관계 연결</h2></div><button type="button" class="dialog-close" data-close="relation" aria-label="닫기">×</button></div>
-      <div class="form-grid"><label><span>첫 번째 구성원</span><select id="fromPerson" required></select></label><label><span>두 번째 구성원</span><select id="toPerson" required></select></label><label class="full"><span>관계 유형</span><select id="relationType"><option value="marriage">혼인·부부</option><option value="separated">별거</option><option value="divorced">이혼</option><option value="parent">부모–자녀</option><option value="close">친밀·강한 긍정</option><option value="distant">소원·불명확</option><option value="conflict">갈등·적대</option></select></label></div>
+      <div class="form-grid"><label><span>시작 구성원</span><select id="fromPerson" required></select></label><label><span>연결할 구성원</span><select id="toPerson" required></select></label><label class="full"><span>연결선 선택</span><select id="relationType"><option value="marriage">실선 · 부부/동반자</option><option value="parent">하위 분류선 · 부모→자녀</option><option value="separated">분리선 1개 · 별거</option><option value="divorced">분리선 2개 · 이혼</option><option value="distant">점선 · 소원/불명확</option><option value="close">굵은선 · 친밀/지지</option><option value="conflict">지그재그 · 갈등/적대</option></select></label></div>
       <div class="dialog-actions"><button type="button" class="button ghost" data-close="relation">취소</button><button type="submit" class="button primary">연결하기</button></div>
     </form>
   </dialog>
