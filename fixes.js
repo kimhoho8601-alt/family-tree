@@ -11,8 +11,7 @@
   function isLikelyCouple(a, b) {
     if (!a || !b) return false;
     if (isLikelyParentCouple(a, b)) return true;
-    if (a.role === '배우자' || b.role === '배우자') return true;
-    return false;
+    return a.role === '배우자' || b.role === '배우자';
   }
 
   function alignCouple(a, b, anchorId = null) {
@@ -28,8 +27,7 @@
     return state.relations.filter(r => {
       if (!PARTNERSHIP_TYPES.has(r.type)) return false;
       if (r.from !== pid && r.to !== pid) return false;
-      const a = findPerson(r.from), b = findPerson(r.to);
-      return isLikelyCouple(a, b);
+      return isLikelyCouple(findPerson(r.from), findPerson(r.to));
     });
   }
 
@@ -57,7 +55,8 @@
   }
 
   function completeParentPair(parentId, childId) {
-    const parent = findPerson(parentId), child = findPerson(childId);
+    const parent = findPerson(parentId);
+    const child = findPerson(childId);
     if (!parent || !child || !CHILD_ROLES.has(child.role)) return false;
     const partnerId = findOppositeParentPartner(parentId);
     if (!partnerId) return false;
@@ -76,8 +75,8 @@
   shapeMarkup = function (p) {
     const outer = p.role === '대상자'
       ? p.gender === 'female'
-        ? '<circle class="outer" r="35" style="stroke:#33272a"/>'
-        : '<rect class="outer" x="-35" y="-35" width="70" height="70" style="stroke:#33272a"/>'
+        ? '<circle class="outer" r="35"/>'
+        : '<rect class="outer" x="-35" y="-35" width="70" height="70"/>'
       : '';
     const shape = p.gender === 'female'
       ? '<circle class="shape" r="29"/>'
@@ -132,13 +131,22 @@
   function householdMarkup() {
     const members = state.people.filter(p => p.cohabit === 'yes');
     if (!members.length) return '';
-    const padX = 52, padTop = 50, padBottom = 92;
+
+    const padX = 58;
+    const padTop = 58;
+    const padBottom = 92;
     const x1 = Math.max(8, Math.min(...members.map(p => p.x)) - padX);
     const y1 = Math.max(8, Math.min(...members.map(p => p.y)) - padTop);
     const x2 = Math.min(1192, Math.max(...members.map(p => p.x)) + padX);
     const y2 = Math.min(712, Math.max(...members.map(p => p.y)) + padBottom);
-    const labelY = Math.max(22, y1 - 7);
-    return `<g class="cohabit-boundary" pointer-events="none"><rect x="${x1}" y="${y1}" width="${Math.max(44, x2 - x1)}" height="${Math.max(70, y2 - y1)}" rx="18" fill="none" stroke="#c9002b" stroke-width="3"/><text x="${x1 + 12}" y="${labelY}" fill="#c9002b" font-family="IBM Plex Sans KR, sans-serif" font-size="12" font-weight="700">동거가족</text></g>`;
+    const width = Math.max(80, x2 - x1);
+    const height = Math.max(100, y2 - y1);
+    const labelY = y1 > 24 ? y1 - 8 : y1 + 18;
+
+    return `<g class="cohabit-boundary" pointer-events="none">
+      <rect x="${x1}" y="${y1}" width="${width}" height="${height}" rx="10" fill="none" stroke="#33272a" stroke-width="2.5"/>
+      <text x="${x1 + 12}" y="${labelY}" fill="#33272a" font-family="IBM Plex Sans KR, sans-serif" font-size="12" font-weight="700">동거가족</text>
+    </g>`;
   }
 
   renderRelations = function () {
@@ -236,10 +244,75 @@
     return changed;
   }
 
+  function installDownloadFix() {
+    const button = $('#downloadBtn');
+    if (!button) return;
+
+    button.onclick = () => {
+      if (!state.people.length) {
+        toast('저장할 가계도가 없습니다');
+        return;
+      }
+
+      const clone = els.svg.cloneNode(true);
+      clone.style.transform = '';
+      clone.setAttribute('width', '1200');
+      clone.setAttribute('height', '720');
+
+      clone.querySelector('.canvas-grid')?.remove();
+      clone.querySelectorAll('.junction-handle').forEach(el => el.remove());
+      clone.querySelectorAll('.relation-hit').forEach(el => el.remove());
+
+      const css = document.createElementNS(svgNS, 'style');
+      css.textContent = `
+        .node .shape{fill:white;stroke:#33272a;stroke-width:3}
+        .node .outer{fill:none;stroke:#33272a;stroke-width:3}
+        .node .death{display:none;stroke:#c9002b;stroke-width:3}
+        .node.dead .death{display:block}
+        .node-label{font:600 14px sans-serif;fill:#241b1d;text-anchor:middle}
+        .node-meta{font:11px sans-serif;fill:#746a6c;text-anchor:middle}
+        .relation{fill:none;stroke:#5c5053;stroke-width:2.5}
+        .relation.parent{stroke:#493d40;stroke-width:3}
+        .relation.close{stroke-width:6}
+        .relation.distant{stroke-dasharray:8 7}
+        .relation.conflict{stroke:#c9002b}
+        .cohabit-boundary rect{fill:none;stroke:#33272a;stroke-width:2.5}
+        .cohabit-boundary text{fill:#33272a;font:700 12px sans-serif}
+      `;
+      clone.prepend(css);
+
+      const xml = new XMLSerializer().serializeToString(clone);
+      const img = new Image();
+      const url = URL.createObjectURL(new Blob([xml], { type: 'image/svg+xml' }));
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 2400;
+        canvas.height = 1440;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(2, 2);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `가계도_${new Date().toISOString().slice(0, 10)}.png`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          toast('PNG 파일로 저장했습니다');
+        }, 'image/png');
+      };
+
+      img.src = url;
+    };
+  }
+
   const style = document.createElement('style');
   style.textContent = `
     .node.proband .outer{stroke:#33272a!important}
-    .cohabit-key{width:18px!important;height:13px!important;border:2px solid var(--red)!important;border-radius:4px!important}
+    .cohabit-boundary rect{stroke:#33272a!important}
+    .cohabit-boundary text{fill:#33272a!important}
+    .cohabit-key{width:18px!important;height:13px!important;border:2px solid #33272a!important;border-radius:3px!important}
   `;
   document.head.append(style);
 
@@ -256,6 +329,7 @@
     const node = e.target.closest('.node');
     if (node && !connectMode.active) activeDragId = node.dataset.id;
   }, true);
+
   els.svg.addEventListener('pointerup', () => {
     if (!activeDragId) return;
     if (alignPartnersOf(activeDragId)) {
@@ -269,4 +343,5 @@
   const aligned = alignExistingCouples();
   if (repaired || aligned) save();
   render();
+  installDownloadFix();
 })();
