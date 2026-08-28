@@ -61,7 +61,7 @@
   const clear=$('#clearDiagramBtn');
   if(clear)clear.onclick=()=>{
     if(!state.people.length)return;
-    if(!confirm('모든 구성원과 연결선을 삭제할까요? 이 작업은 되돌릴 수 없습니다.'))return;
+    if(!confirm('모든 구성원과 연결선을 삭제할까요? 필요하면 되돌리기로 복원할 수 있습니다.'))return;
     state.people=[];state.relations=[];state.cohabitBox=null;clearTransient();save();render();activatePanel('quickPanel');toast('전체 구조를 삭제했습니다');
   };
 })();
