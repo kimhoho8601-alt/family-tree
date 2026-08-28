@@ -89,10 +89,8 @@
         const motherSteps = adultNeighbors(people, relations, mother.id).filter(p => ['부','모'].includes(p.role) && p.id !== father.id && !mainSet.has(p.id));
 
         if (fatherSteps.length && !motherSteps.length) {
-          // 새엄마 - 부 - 친모
           setPos(father, 600); setPos(mother, 850); fatherSteps.forEach((p, i) => setPos(p, 350 - i * 210));
         } else if (motherSteps.length && !fatherSteps.length) {
-          // 친부 - 모 - 새아빠
           setPos(father, 350); setPos(mother, 600); motherSteps.forEach((p, i) => setPos(p, 850 + i * 210));
         } else if (fatherSteps.length && motherSteps.length) {
           setPos(father, 500); setPos(mother, 700); fatherSteps.forEach((p, i) => setPos(p, 250 - i * 170)); motherSteps.forEach((p, i) => setPos(p, 950 + i * 170));
@@ -149,7 +147,7 @@
     });
     parents.forEach(c => {
       const father = c.dataset.kind === 'father';
-      const p = {id:id(), name:q('.aq-name', c)?.value.trim() || (father?'부':'모'), role:father?'부':'모', gender:father?'male':'female', age:q('.aq-age', c)?.value.trim() || '', life:'alive', cohabit:q('.aq-co-sel', c)?.value || 'unknown', note:'', x:father?420:780, y:225};
+      const p = {id:id(), name:q('.aq-name', c)?.value.trim() || (father?'부':'모'), role:father?'부':'모', gender:father?'male':'female', age:q('.aq-age', c)?.value.trim() || '', life:q('.aq-life', c)?.value || 'alive', cohabit:q('.aq-co-sel', c)?.value || 'unknown', note:'', x:father?420:780, y:225};
       people.push(p); map.set(c.dataset.uid, p);
     });
     extras.forEach((c, i) => {
@@ -186,8 +184,6 @@
     save(); render(); activatePanel('editPanel'); toast('새 가족 관계 로직으로 가계도를 만들었습니다');
   }
 
-  // Window capture executes before every document-level legacy submit handler.
-  // This makes this builder authoritative even though older scripts are still present.
   window.addEventListener('submit', e => {
     if (e.target !== form) return;
     e.preventDefault(); e.stopImmediatePropagation(); build();
@@ -202,6 +198,5 @@
   });
   form.addEventListener('input', e => { if (e.target.matches('.aq-name')) setTimeout(ensureParentTargetOptions, 0); });
 
-  // Correct defaults after all legacy UI scripts finish.
   setTimeout(ensureParentTargetOptions, 0);
 })();
