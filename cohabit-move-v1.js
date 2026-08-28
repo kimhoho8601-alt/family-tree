@@ -115,7 +115,17 @@
   });
   const clearAfterDrag=()=>clearGuides();
   els.svg.addEventListener('pointerup',clearAfterDrag);els.svg.addEventListener('pointercancel',clearAfterDrag);els.svg.addEventListener('lostpointercapture',clearAfterDrag);
-  document.querySelector('#downloadBtn')?.addEventListener('pointerdown',clearGuides,true);document.querySelector('#downloadBtn')?.addEventListener('click',clearGuides,true);
+  document.querySelector('#downloadBtn')?.addEventListener('pointerdown',clearGuides,true);
+
+  // Output should contain only the actual cohabiting boundary, not editing guidance.
+  // Hide all boundary labels/handles synchronously before the PNG exporter clones the SVG.
+  document.querySelector('#downloadBtn')?.addEventListener('click',()=>{
+    clearGuides();
+    const helpers=[...els.relations.querySelectorAll('.cohabit-boundary-v3 text,.cohabit-resize-handle,.cohabit-move-handle,.cohabit-move-label,.cohabit-hint')];
+    const previous=helpers.map(el=>el.style.display);
+    helpers.forEach(el=>el.style.display='none');
+    requestAnimationFrame(()=>helpers.forEach((el,i)=>{el.style.display=previous[i];}));
+  },true);
 
   renderRelations();
 })();
