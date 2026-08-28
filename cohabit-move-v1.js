@@ -2,6 +2,7 @@
   if (typeof state === 'undefined' || typeof els === 'undefined') return;
 
   const ns = 'http://www.w3.org/2000/svg';
+  let decorateQueued = false;
 
   function isCohabit(p) {
     return p && (p.cohabit === true || ['yes','true','1','동거'].includes(String(p.cohabit).toLowerCase()));
@@ -33,6 +34,45 @@
     return p.matrixTransform(els.svg.getScreenCTM().inverse());
   }
 
+  function createHandle(g) {
+    let handle = g.querySelector('.cohabit-move-handle');
+    let label = g.querySelector('.cohabit-move-label');
+
+    if (!handle) {
+      handle = document.createElementNS(ns, 'rect');
+      handle.setAttribute('class', 'cohabit-move-handle');
+      handle.setAttribute('rx', '7');
+      handle.setAttribute('fill', '#fff');
+      handle.setAttribute('stroke', '#33272a');
+      handle.setAttribute('stroke-width', '1.5');
+      handle.setAttribute('vector-effect', 'non-scaling-stroke');
+      handle.setAttribute('pointer-events', 'all');
+      handle.style.cursor = 'grab';
+
+      const title = document.createElementNS(ns, 'title');
+      title.textContent = '드래그해서 동거가족 범위 전체 이동';
+      handle.append(title);
+    }
+
+    if (!label) {
+      label = document.createElementNS(ns, 'text');
+      label.setAttribute('class', 'cohabit-move-label');
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('font-size', '10');
+      label.setAttribute('font-weight', '700');
+      label.setAttribute('fill', '#33272a');
+      label.setAttribute('pointer-events', 'none');
+      label.textContent = '↔ 이동';
+    }
+
+    if (!handle.parentNode) g.append(handle);
+    if (!label.parentNode) g.append(label);
+
+    // 이동 버튼은 항상 마지막에 두어 resize 과정에서 다른 요소에 가려지지 않게 한다.
+    g.append(handle, label);
+    return {handle, label};
+  }
+
   function decorate() {
     const g = els.relations.querySelector('.cohabit-boundary-v3');
     if (!g) return;
@@ -40,7 +80,6 @@
     const b = box();
     if (!b) return;
 
-    // 기존 메인 사각형은 테두리 자체에서도 드래그 가능하게 유지한다.
     const rect = g.querySelector('rect:not(.cohabit-resize-handle):not(.cohabit-move-handle)');
     if (rect) {
       rect.classList.add('cohabit-move-surface');
@@ -48,58 +87,68 @@
       rect.style.cursor = 'move';
     }
 
-    // 크기를 작게 줄였을 때 내부가 노드/관계선에 가려져도 이동할 수 있도록
-    // 항상 최상단에 독립적인 이동 핸들을 만든다.
-    g.querySelectorAll('.cohabit-move-handle,.cohabit-move-label').forEach(el => el.remove());
+    const {handle, label} = createHandle(g);
 
-    const handleW = Math.max(54, Math.min(92, b.w - 28));
+    // 박스가 최소 크기여도 버튼 자체는 64px 이상 유지한다.
+    const handleW = Math.max(64, Math.min(96, Math.max(64, b.w - 24)));
     const handleH = 22;
-    const handleX = Math.max(b.x + 14, Math.min(b.x + b.w - handleW - 14, b.x + b.w / 2 - handleW / 2));
-    const handleY = b.y <= 30 ? b.y + 6 : b.y - 28;
+    const centerX = b.x + b.w / 2;
+    let handleX = centerX - handleW / 2;
+    handleX = Math.max(8, Math.min(1192 - handleW, handleX));
 
-    const handle = document.createElementNS(ns, 'rect');
-    handle.setAttribute('class', 'cohabit-move-handle');
+    // 상단 여유가 없을 때만 박스 안쪽 상단에 표시한다.
+    const handleY = b.y >= 32 ? b.y - 28 : b.y + 6;
+
     handle.setAttribute('x', handleX);
     handle.setAttribute('y', handleY);
     handle.setAttribute('width', handleW);
     handle.setAttribute('height', handleH);
-    handle.setAttribute('rx', '7');
-    handle.setAttribute('fill', '#fff');
-    handle.setAttribute('stroke', '#33272a');
-    handle.setAttribute('stroke-width', '1.5');
-    handle.setAttribute('vector-effect', 'non-scaling-stroke');
-    handle.setAttribute('pointer-events', 'all');
-    handle.style.cursor = 'grab';
 
-    const label = document.createElementNS(ns, 'text');
-    label.setAttribute('class', 'cohabit-move-label');
     label.setAttribute('x', handleX + handleW / 2);
     label.setAttribute('y', handleY + 14.5);
-    label.setAttribute('text-anchor', 'middle');
-    label.setAttribute('font-size', '10');
-    label.setAttribute('font-weight', '700');
-    label.setAttribute('fill', '#33272a');
-    label.setAttribute('pointer-events', 'none');
-    label.textContent = '↔ 이동';
-
-    const firstResizeHandle = g.querySelector('.cohabit-resize-handle');
-    if (firstResizeHandle) {
-      g.insertBefore(handle, firstResizeHandle);
-      g.insertBefore(label, firstResizeHandle);
-    } else {
-      g.append(handle, label);
-    }
-
-    const title = document.createElementNS(ns, 'title');
-    title.textContent = '드래그해서 동거가족 범위 전체 이동';
-    handle.append(title);
   }
 
+  function scheduleDecorate() {
+    if (decorateQueued) return;
+    decorateQueued = true;
+    requestAnimationFrame(() => {
+      decorateQueued = false;
+      decorate();
+    });
+  }
+
+  // 일반 렌더 경로에서는 즉시 이동 버튼을 복원한다.
   const oldRenderRelations = renderRelations;
   renderRelations = function() {
     oldRenderRelations();
     decorate();
   };
+
+  // family-layout-v2의 resize 로직은 renderRelations()를 거치지 않고
+  // drawCohabitBox()만 직접 호출한다. 그 과정에서 boundary 그룹 전체가 새로 생성되어
+  // 이동 버튼이 사라졌었다. DOM 교체를 감시해 새 그룹이 생기는 즉시 버튼을 다시 붙인다.
+  const observer = new MutationObserver(mutations => {
+    let boundaryChanged = false;
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        if (node.matches?.('.cohabit-boundary-v3') || node.querySelector?.('.cohabit-boundary-v3')) {
+          boundaryChanged = true;
+          break;
+        }
+      }
+      if (boundaryChanged) break;
+    }
+    if (boundaryChanged) scheduleDecorate();
+  });
+  observer.observe(els.relations, {childList:true, subtree:false});
+
+  // resize 중에는 매 pointermove 뒤에도 한 번 확인한다.
+  // 기존 resize listener가 먼저 실행된 뒤 이 listener가 실행되므로 새 boundary에 바로 버튼을 복원한다.
+  els.svg.addEventListener('pointermove', () => {
+    const g = els.relations.querySelector('.cohabit-boundary-v3');
+    if (g && !g.querySelector('.cohabit-move-handle')) scheduleDecorate();
+  }, true);
 
   let moving = null;
 
