@@ -7,7 +7,18 @@
   const isLikelyParentCouple=(a,b)=>!!a&&!!b&&((a.role==='부'&&b.role==='모')||(a.role==='모'&&b.role==='부'));
   const isLikelyCouple=(a,b)=>!!a&&!!b&&(isLikelyParentCouple(a,b)||a.role==='배우자'||b.role==='배우자');
 
-  function alignCouple(a,b,anchorId=null){if(!isLikelyCouple(a,b))return false;const y=anchorId===a.id?a.y:anchorId===b.id?b.y:Math.round((a.y+b.y)/2);let changed=false;if(a.y!==y){a.y=y;changed=true}if(b.y!==y){b.y=y;changed=true}return changed;}
+  function alignCouple(a,b,anchorId=null){
+    if(!isLikelyCouple(a,b))return false;
+    if(a.positionLocked&&b.positionLocked)return false;
+    let y;
+    if(a.positionLocked&&!b.positionLocked)y=a.y;
+    else if(b.positionLocked&&!a.positionLocked)y=b.y;
+    else y=anchorId===a.id?a.y:anchorId===b.id?b.y:Math.round((a.y+b.y)/2);
+    let changed=false;
+    if(!a.positionLocked&&a.y!==y){a.y=y;changed=true}
+    if(!b.positionLocked&&b.y!==y){b.y=y;changed=true}
+    return changed;
+  }
   function partnerRelationsFor(pid){return state.relations.filter(r=>PARTNERSHIP_TYPES.has(r.type)&&(r.from===pid||r.to===pid)&&isLikelyCouple(findPerson(r.from),findPerson(r.to)));}
   function alignPartnersOf(pid){const p=findPerson(pid);if(!p)return false;let changed=false;partnerRelationsFor(pid).forEach(r=>{const x=findPerson(r.from===pid?r.to:r.from);if(x)changed=alignCouple(p,x,pid)||changed});return changed;}
   function normalizeParentDirection(from,to){const a=findPerson(from),b=findPerson(to);if(a&&b&&CHILD_ROLES.has(a.role)&&!CHILD_ROLES.has(b.role))return{from:to,to:from};return{from,to};}
@@ -34,6 +45,16 @@
   };
 
   const style=document.createElement('style');style.textContent='.node.proband .outer{stroke:#33272a!important}';document.head.append(style);
-  let activeDragId=null;els.nodes.addEventListener('pointerdown',e=>{const n=e.target.closest('.node');if(n&&!connectMode.active)activeDragId=n.dataset.id},true);els.svg.addEventListener('pointerup',()=>{if(!activeDragId)return;if(alignPartnersOf(activeDragId)){save();render()}activeDragId=null});
+  let activeDragId=null,activeDragStart=null;
+  els.nodes.addEventListener('pointerdown',e=>{const n=e.target.closest('.node');if(n&&!connectMode.active){const p=findPerson(n.dataset.id);activeDragId=n.dataset.id;activeDragStart=p?{x:p.x,y:p.y}:null}},true);
+  els.svg.addEventListener('pointerup',()=>{
+    if(!activeDragId)return;
+    const p=findPerson(activeDragId),moved=!!(p&&activeDragStart&&(Math.abs(p.x-activeDragStart.x)>.5||Math.abs(p.y-activeDragStart.y)>.5));
+    if(moved&&alignPartnersOf(activeDragId)){
+      if(typeof window.__historySync==='function')window.__historySync();else save();
+      render();
+    }
+    activeDragId=null;activeDragStart=null;
+  });
   render();
 })();
