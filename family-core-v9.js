@@ -99,21 +99,16 @@
         const mainSet = new Set(mainIds);
         const explicitFatherSteps = adultNeighbors(people, relations, father.id).filter(p => ['부','모'].includes(p.role) && p.id !== mother.id && !mainSet.has(p.id));
         const explicitMotherSteps = adultNeighbors(people, relations, mother.id).filter(p => ['부','모'].includes(p.role) && p.id !== father.id && !mainSet.has(p.id));
-
-        // 핵심 보정: 어떤 아동의 parent로도 지정되지 않은 추가 모/부는 새부모 후보로 본다.
-        // 이 후보는 관계선이 아직 없어도 혈연 부모 사이에 끼우지 않는다.
         const unassignedMothers = parentPeople.filter(p => p.role === '모' && !allBiologicalIds.has(p.id) && p.id !== mother.id);
         const unassignedFathers = parentPeople.filter(p => p.role === '부' && !allBiologicalIds.has(p.id) && p.id !== father.id);
         const fatherSteps = [...new Map([...explicitFatherSteps, ...unassignedMothers].map(p => [p.id, p])).values()];
         const motherSteps = [...new Map([...explicitMotherSteps, ...unassignedFathers].map(p => [p.id, p])).values()];
 
         if (fatherSteps.length && !motherSteps.length) {
-          // 새엄마 - 부 - 친모
           setPos(father, 600);
           setPos(mother, 850);
           fatherSteps.forEach((p, i) => setPos(p, 350 - i * 210));
         } else if (motherSteps.length && !fatherSteps.length) {
-          // 친부 - 모 - 새아빠
           setPos(father, 350);
           setPos(mother, 600);
           motherSteps.forEach((p, i) => setPos(p, 850 + i * 210));
@@ -131,7 +126,6 @@
       }
     }
 
-    // 메인 아동 외 다른 실제 부모쌍 배치
     const pairs = new Map();
     parentMap.forEach(ids => { if (ids.length === 2) pairs.set(pairKey(ids[0], ids[1]), ids.slice()); });
     let pi = 0;
@@ -147,7 +141,6 @@
       setPos(right, center + 115);
     });
 
-    // 관계만 있고 아직 배치되지 않은 부모는 연결 상대의 바깥쪽에 둔다.
     let changed = true;
     while (changed) {
       changed = false;
@@ -161,7 +154,6 @@
 
     parentPeople.filter(p => !placed.has(p.id)).forEach((p, i, arr) => setPos(p, arr.length === 1 ? 600 : 120 + i * (960 / Math.max(1, arr.length - 1))));
 
-    // 아동은 오직 실제 parent 관계를 기준으로 위치를 계산한다.
     const groups = new Map();
     children.forEach(ch => {
       const ids = (parentMap.get(ch.id) || []).slice().sort();
@@ -198,7 +190,7 @@
 
     parents.forEach(c => {
       const father = c.dataset.kind === 'father';
-      const p = {id:id(), name:q('.aq-name', c)?.value.trim() || (father?'부':'모'), role:father?'부':'모', gender:father?'male':'female', age:q('.aq-age', c)?.value.trim() || '', life:'alive', cohabit:q('.aq-co-sel', c)?.value || 'unknown', note:'', x:father?420:780, y:225};
+      const p = {id:id(), name:q('.aq-name', c)?.value.trim() || (father?'부':'모'), role:father?'부':'모', gender:father?'male':'female', age:q('.aq-age', c)?.value.trim() || '', life:q('.aq-life', c)?.value || 'alive', cohabit:q('.aq-co-sel', c)?.value || 'unknown', note:'', x:father?420:780, y:225};
       people.push(p); map.set(c.dataset.uid, p);
     });
 
@@ -250,7 +242,6 @@
     toast('가계도를 새부모 분리 로직으로 만들었습니다');
   }
 
-  // window capture가 모든 기존 document/form submit 핸들러보다 먼저 실행된다.
   window.addEventListener('submit', e => {
     if (e.target !== form) return;
     e.preventDefault();
