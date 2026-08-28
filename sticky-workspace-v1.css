@@ -1,0 +1,71 @@
+:root{--app-header-h:72px}
+
+/* Keep the global file actions available while the page scrolls. */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  box-shadow:0 4px 16px rgba(55,28,34,.05);
+}
+
+/* overflow:hidden prevented descendants from using viewport sticky positioning. */
+.workspace{
+  overflow:clip;
+  align-items:start;
+}
+
+/* Left quick/detail editor follows the page and keeps its own inner scroll. */
+.sidebar{
+  position:sticky;
+  top:calc(var(--app-header-h) + 12px);
+  align-self:start;
+  height:calc(100vh - var(--app-header-h) - 24px);
+  max-height:calc(100vh - var(--app-header-h) - 24px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  background:#fff;
+  z-index:420;
+}
+
+/* The main editing controls remain directly below the global header. */
+.canvas-toolbar{
+  position:sticky;
+  top:var(--app-header-h);
+  z-index:500;
+  background:rgba(255,255,255,.98);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  box-shadow:0 4px 14px rgba(55,28,34,.045);
+}
+
+/* When connection mode is active, keep its instructions under the tool bar. */
+.connection-bar{
+  position:sticky;
+  top:calc(var(--app-header-h) + 78px);
+  z-index:490;
+}
+
+/* Existing tab bar stays visible while the left panel itself scrolls. */
+.mode-tabs{
+  top:0;
+  z-index:430;
+  background:#f5f0f1;
+}
+
+@media(max-width:900px){
+  .sidebar{
+    position:relative;
+    top:auto;
+    height:auto;
+    max-height:none;
+    overflow:visible;
+    scrollbar-gutter:auto;
+  }
+  .canvas-toolbar{top:var(--app-header-h)}
+}
+
+@media(max-width:560px){
+  :root{--app-header-h:64px}
+  .connection-bar{top:calc(var(--app-header-h) + 112px)}
+}
