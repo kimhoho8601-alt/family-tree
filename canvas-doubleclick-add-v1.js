@@ -68,3 +68,14 @@
 
   personDialog.addEventListener('close', () => { pendingDoubleAdd = null; });
 })();
+
+// Loaded after every editor extension so parent-couple structural lines and
+// relationship-quality lines can coexist without one replacing the other.
+(() => {
+  if (document.querySelector('script[data-parent-couple-layered-relation]')) return;
+  const script = document.createElement('script');
+  script.src = 'parent-couple-layered-relation-v1.js?v=20260907-1';
+  script.async = false;
+  script.dataset.parentCoupleLayeredRelation = 'v1';
+  document.body.append(script);
+})();
