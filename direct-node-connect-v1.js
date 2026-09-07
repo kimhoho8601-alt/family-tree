@@ -3,6 +3,7 @@
 
   document.documentElement.dataset.directNodeConnect = 'v1';
   let firstId = null;
+  let firstUnion = null;
   let press = null;
 
   const style = document.createElement('style');
@@ -16,7 +17,9 @@
 
   function clearDirectSelection() {
     firstId = null;
+    firstUnion = null;
     els.nodes.querySelectorAll('.direct-connect-selected').forEach(node => node.classList.remove('direct-connect-selected'));
+    els.relations.querySelectorAll('.union-selected').forEach(group => group.classList.remove('union-selected'));
   }
 
   function markFirst(personId) {
@@ -25,6 +28,18 @@
     els.nodes.querySelector(`.node[data-id="${personId}"]`)?.classList.add('direct-connect-selected');
     const person = state.people.find(item => item.id === personId);
     if (typeof toast === 'function') toast(`${person?.name || '구성원'} 선택 · 연결할 다른 구성원을 클릭하세요`);
+  }
+
+  function markUnion(group) {
+    const relation = state.relations.find(item => item.id === group?.dataset.relation);
+    if (!relation || relation.type === 'parent') return false;
+    clearDirectSelection();
+    firstUnion = [relation.from, relation.to];
+    group.classList.add('union-selected');
+    const a = state.people.find(person => person.id === relation.from);
+    const b = state.people.find(person => person.id === relation.to);
+    if (typeof toast === 'function') toast(`${a?.name || '부모'} + ${b?.name || '부모'} 선택 · 연결할 자녀를 클릭하세요`);
+    return true;
   }
 
   function openChoice(from, to) {
@@ -42,7 +57,10 @@
     if (event.button !== 0) { press = null; return; }
     if (typeof connectMode !== 'undefined' && (connectMode.active || connectMode.delete)) { press = null; return; }
     const node = event.target.closest?.('.node');
-    press = node ? {id:node.dataset.id, x:event.clientX, y:event.clientY, pointerId:event.pointerId} : null;
+    const junction = event.target.closest?.('.junction-handle');
+    const group = junction?.closest?.('.relation-group[data-relation]');
+    press = node ? {kind:'node',id:node.dataset.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId}
+      : group ? {kind:'union',group,x:event.clientX,y:event.clientY,pointerId:event.pointerId} : null;
   }, true);
 
   els.svg.addEventListener('pointerup', event => {
@@ -51,7 +69,23 @@
     press = null;
     if (Math.hypot(event.clientX-current.x, event.clientY-current.y) > 6) return;
     if (typeof connectMode !== 'undefined' && (connectMode.active || connectMode.delete)) return;
+    if (current.kind === 'union') {
+      if (firstId) {
+        const relation = state.relations.find(item => item.id === current.group.dataset.relation);
+        if (relation && relation.type !== 'parent' && typeof connectUnionToChild === 'function') connectUnionToChild([relation.from, relation.to], firstId);
+        clearDirectSelection();
+        return;
+      }
+      markUnion(current.group);
+      return;
+    }
     if (!state.people.some(person => person.id === current.id)) { clearDirectSelection(); return; }
+    if (firstUnion) {
+      const parents = [...firstUnion];
+      clearDirectSelection();
+      if (typeof connectUnionToChild === 'function') connectUnionToChild(parents, current.id);
+      return;
+    }
     if (!firstId) { markFirst(current.id); return; }
     if (firstId === current.id) { clearDirectSelection(); return; }
     openChoice(firstId, current.id);
@@ -60,8 +94,14 @@
   els.svg.addEventListener('pointercancel', () => { press = null; }, true);
   els.svg.addEventListener('lostpointercapture', () => { press = null; }, true);
   els.svg.addEventListener('pointerdown', event => {
-    if (!event.target.closest?.('.node') && firstId) clearDirectSelection();
+    if (!event.target.closest?.('.node,.junction-handle') && (firstId || firstUnion)) clearDirectSelection();
   });
+  els.relations.addEventListener('click', event => {
+    if (!event.target.closest?.('.junction-handle')) return;
+    if (typeof connectMode !== 'undefined' && (connectMode.active || connectMode.delete)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
   document.querySelector('#relationBtn')?.addEventListener('click', clearDirectSelection, true);
   els.lineChoiceDialog?.addEventListener('close', clearDirectSelection);
 
