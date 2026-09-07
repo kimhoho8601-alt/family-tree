@@ -18,6 +18,28 @@
     return d+` L${b.x} ${b.y}`;
   }
 
+  function offsetPath(a,b,offset){
+    const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(1,Math.hypot(dx,dy));
+    const ox=-dy/len*offset,oy=dx/len*offset;
+    return `M${a.x+ox} ${a.y+oy} L${b.x+ox} ${b.y+oy}`;
+  }
+
+  function emotionalMarkup(type,a,b,d){
+    if(type==='enmeshed'){
+      return [-6,0,6].map(offset=>`<path class="relation enmeshed" d="${offsetPath(a,b,offset)}" fill="none" stroke="#493d40" stroke-width="2.4"/>`).join('');
+    }
+    if(type==='close_conflict'){
+      return `<path class="relation close-conflict-base" d="${d}" fill="none" stroke="#493d40" stroke-width="6"/><path class="relation close-conflict-zigzag" d="${zigzagPath(a,b)}" fill="none" stroke="#c9002b" stroke-width="2.5"/>`;
+    }
+    if(type==='cutoff'){
+      const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(1,Math.hypot(dx,dy)),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,nx=-dy/len*10,ny=dx/len*10;
+      return `<path class="relation cutoff" d="${d}" fill="none" stroke="#493d40" stroke-width="2.5" stroke-dasharray="18 7"/><path d="M${mx+nx} ${my+ny} L${mx-nx} ${my-ny}" fill="none" stroke="#c9002b" stroke-width="3"/>`;
+    }
+    const path=type==='conflict'?zigzagPath(a,b):d;
+    const dash=type==='distant'?'stroke-dasharray="8 7"':'';
+    return `<path class="relation ${type}" d="${path}" fill="none" stroke="${strokeFor(type)}" stroke-width="${type==='close'?6:3}" ${dash}/>`;
+  }
+
   function safeJunctionY(parentY, childY){
     // A child line should always leave the parent generation downward.
     // Keep enough room under the parent symbols and above the child symbols.
@@ -96,9 +118,8 @@
         const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
         extra=`<path d="M${mx-7} ${my-12}l14 24${r.type==='divorced'?`M${mx+2} ${my-12}l14 24`:''}" fill="none" stroke="#c9002b" stroke-width="3"/>`;
       }
-      const d=r.type==='conflict'?zigzagPath(a,b):`M${a.x} ${a.y} L${b.x} ${b.y}`;
-      const dash=r.type==='distant'?'stroke-dasharray="8 7"':'';
-      return `<g data-relation="${r.id}" class="relation-group"><path class="relation ${r.type}" d="${d}" fill="none" stroke="${strokeFor(r.type)}" stroke-width="${r.type==='close'?6:3}" ${dash}/>${extra}<path class="relation-hit" d="${d}" fill="none" stroke="transparent" stroke-width="18"/></g>`;
+      const d=`M${a.x} ${a.y} L${b.x} ${b.y}`;
+      return `<g data-relation="${r.id}" class="relation-group">${emotionalMarkup(r.type,a,b,d)}${extra}<path class="relation-hit" d="${d}" fill="none" stroke="transparent" stroke-width="22"/></g>`;
     }).join('');
 
     els.relations.innerHTML=markup;
