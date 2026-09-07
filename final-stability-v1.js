@@ -8,7 +8,7 @@
   const VALID_LIFE = new Set(['alive','dead','unknown']);
   const VALID_COHABIT = new Set(['yes','no','unknown']);
   const VALID_GENDER = new Set(['male','female','unknown']);
-  const VALID_RELATION = new Set(['marriage','parent','separated','divorced','distant','close','conflict']);
+  const VALID_RELATION = new Set(['marriage','parent','separated','divorced','distant','close','conflict','enmeshed','cutoff','close_conflict']);
   const STRUCTURAL_PARTNER = new Set(['marriage','separated','divorced']);
   const findPerson = id => state.people.find(p => p.id === id);
   const clampX = x => Math.max(55, Math.min(1145, x));
