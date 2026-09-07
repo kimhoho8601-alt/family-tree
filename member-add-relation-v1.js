@@ -114,8 +114,15 @@
   function fillTargets() {
     const existingId = document.querySelector('#personId')?.value || '';
     const isAdd = !existingId;
-    section.hidden = !isAdd;
+    const isCanvasDoubleClick = window.__PERSON_ADD_MODE__ === 'canvas-doubleclick';
+    section.hidden = !isAdd || isCanvasDoubleClick;
     if (!isAdd) return;
+
+    if (isCanvasDoubleClick) {
+      typeSelect.value = 'none';
+      parentWrap.hidden = true;
+      return;
+    }
 
     const people = state.people.filter(p => p?.id);
     if (!people.length) {
