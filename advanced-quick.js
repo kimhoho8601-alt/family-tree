@@ -23,7 +23,7 @@
   }
 
   function childRelationOptions(){return '<option value="none">기본 부모선만</option><option value="close">친밀·지지</option><option value="distant">소원·불명확</option><option value="conflict">갈등·적대</option>'}
-  function adultRelationOptions(includeNone=true){return `${includeNone?'<option value="none">관계선 지정 안 함</option>':''}<option value="marriage">실선 · 부부/동반자</option><option value="separated">별거</option><option value="divorced">이혼</option><option value="distant">점선 · 소원/불명확</option><option value="close">굵은선 · 친밀/지지</option><option value="conflict">지그재그 · 갈등/적대</option>`}
+  function adultRelationOptions(includeNone=true){return `${includeNone?'<option value="none">관계선 지정 안 함</option>':''}<option value="marriage">실선 · 부부/동반자</option><option value="separated">별거</option><option value="divorced">이혼</option><option value="close">굵은선 · 친밀/지지</option><option value="enmeshed">3중선 · 밀착/융합</option><option value="distant">점선 · 소원/불명확</option><option value="cutoff">단절선 · 관계 끊김</option><option value="conflict">지그재그 · 갈등/적대</option><option value="close_conflict">굵은선+지그재그 · 친밀하지만 갈등</option>`}
 
   function parentCard(kind,i=0){
     const u=U(kind),f=kind==='father',d=document.createElement('div');d.className='aq-card aq-parent';d.dataset.uid=u;d.dataset.kind=kind;
@@ -61,7 +61,7 @@
 
   function layoutParents(people,relations){
     const parents=people.filter(p=>p.role==='부'||p.role==='모');if(!parents.length)return;
-    const edges=relations.filter(r=>['marriage','separated','divorced','distant','close','conflict'].includes(r.type)&&r.relationRole==='adult');
+    const edges=relations.filter(r=>['marriage','separated','divorced','distant','close','conflict','enmeshed','cutoff','close_conflict'].includes(r.type)&&r.relationRole==='adult');
     const degree=new Map(parents.map(p=>[p.id,0]));edges.forEach(r=>{degree.set(r.from,(degree.get(r.from)||0)+1);degree.set(r.to,(degree.get(r.to)||0)+1)});
     const hub=parents.slice().sort((a,b)=>(degree.get(b.id)||0)-(degree.get(a.id)||0))[0];
     const placed=new Set();if(hub&&(degree.get(hub.id)||0)>=2){hub.x=600;hub.y=245;placed.add(hub.id);const ns=edges.filter(r=>r.from===hub.id||r.to===hub.id).map(r=>people.find(p=>p.id===(r.from===hub.id?r.to:r.from))).filter(Boolean);ns.forEach((p,i)=>{const step=Math.floor(i/2)+1,side=i%2===0?-1:1;p.x=600+side*step*260;p.y=245;placed.add(p.id)})}
@@ -97,7 +97,7 @@
     groups.forEach((o,i)=>{const shift=(i%2===0?-1:1)*Math.ceil((i+1)/2)*16,stem=o.anchor+shift,maxPY=Math.max(...o.parents.map(p=>p.y)),lane=Math.min(o.childMin-70,maxPY+92+i*24),xs=[stem,...o.children.map(c=>c.x)],minX=Math.min(...xs),maxX=Math.max(...xs);let d=`M${o.anchor} ${o.py} V${o.py+18}`;if(Math.abs(shift)>1)d+=` H${stem}`;d+=` V${lane}`;if(maxX-minX>1)d+=` M${minX} ${lane} H${maxX}`;o.children.forEach(c=>d+=` M${c.x} ${lane} V${c.y}`);o.g.querySelector('.relation.parent')?.setAttribute('d',d);o.g.querySelector('.relation-hit')?.setAttribute('d',d)})
   }
   function routeParentChildEmotion(){
-    const items=state.relations.filter(r=>r.relationRole==='parent-child-emotional'||(['close','distant','conflict'].includes(r.type)&&(()=>{const a=state.people.find(p=>p.id===r.from),b=state.people.find(p=>p.id===r.to);return a&&b&&((['부','모'].includes(a.role)&&['대상자','자녀'].includes(b.role))||(['부','모'].includes(b.role)&&['대상자','자녀'].includes(a.role)))})()));
+    const items=state.relations.filter(r=>r.relationRole==='parent-child-emotional'||(['close','distant','conflict','enmeshed','cutoff','close_conflict'].includes(r.type)&&(()=>{const a=state.people.find(p=>p.id===r.from),b=state.people.find(p=>p.id===r.to);return a&&b&&((['부','모'].includes(a.role)&&['대상자','자녀'].includes(b.role))||(['부','모'].includes(b.role)&&['대상자','자녀'].includes(a.role)))})()));
     items.forEach((r,i)=>{const a=state.people.find(p=>p.id===r.from),b=state.people.find(p=>p.id===r.to);if(!a||!b)return;const parent=['부','모'].includes(a.role)?a:b,child=parent===a?b:a,g=els.relations.querySelector(`.relation-group[data-relation="${r.id}"]`);if(!g)return;const sign=child.x>=parent.x?1:-1,off=18+(i%3)*7,sx=parent.x+sign*off,sy=parent.y+34,ex=child.x+sign*off,ey=child.y-38;let d;if(r.type==='conflict')d=zigzag({x:sx,y:sy},{x:ex,y:ey});else{const bend=sign*(42+(i%3)*12);d=`M${sx} ${sy} C${sx+bend} ${sy+70},${ex+bend} ${ey-70},${ex} ${ey}`};g.querySelector('.relation')?.setAttribute('d',d);g.querySelector('.relation-hit')?.setAttribute('d',d)})
   }
   function redrawCohabit(){
