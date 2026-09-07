@@ -96,13 +96,13 @@
         markup+=`<g class="relation-group" ${couple?`data-relation="${couple.id}"`:''}><path d="M${left.x} ${left.y} L${right.x} ${right.y}" class="relation ${type}" fill="none" stroke="${strokeFor(type)}" stroke-width="3" ${type==='distant'?'stroke-dasharray="8 7"':''}/>${marks}<path class="relation-hit" d="M${left.x} ${left.y} L${right.x} ${right.y}" fill="none" stroke="transparent" stroke-width="18"/></g>`;
       }
 
-      const minChildX=Math.min(...children.map(c=>c.x));
-      const maxChildX=Math.max(...children.map(c=>c.x));
+      const minChildX=Math.min(startX,...children.map(c=>c.x));
+      const maxChildX=Math.max(startX,...children.map(c=>c.x));
 
       // Important: start at the actual parent / couple midpoint and move DOWN first.
       // This prevents the child connector from jumping above the parent row or tracing the cohabitation box edge.
       let d=`M${startX} ${startY} V${junctionY}`;
-      if(children.length>1)d+=` M${minChildX} ${junctionY} H${maxChildX}`;
+      if(maxChildX-minChildX>1)d+=` M${minChildX} ${junctionY} H${maxChildX}`;
       children.forEach(child=>{
         d+=` M${child.x} ${junctionY} V${child.y}`;
       });
