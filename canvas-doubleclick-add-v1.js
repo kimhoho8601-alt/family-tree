@@ -48,6 +48,7 @@
       point: svgPointFromClient(e.clientX, e.clientY),
       beforeIds: new Set(state.people.map(p => p.id))
     };
+    window.__PERSON_ADD_MODE__ = 'canvas-doubleclick';
     openPerson();
   }, true);
 
@@ -66,7 +67,10 @@
     });
   });
 
-  personDialog.addEventListener('close', () => { pendingDoubleAdd = null; });
+  personDialog.addEventListener('close', () => {
+    pendingDoubleAdd = null;
+    if (window.__PERSON_ADD_MODE__ === 'canvas-doubleclick') delete window.__PERSON_ADD_MODE__;
+  });
 })();
 
 // Loaded after every editor extension so parent-couple structural lines and
