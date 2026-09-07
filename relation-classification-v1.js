@@ -1,6 +1,6 @@
 (() => {
   const CORE_TYPES = new Set(['marriage', 'parent', 'separated', 'divorced']);
-  const OPTIONAL_TYPES = new Set(['distant', 'close', 'conflict']);
+  const OPTIONAL_TYPES = new Set(['distant', 'close', 'conflict', 'enmeshed', 'cutoff', 'close_conflict']);
   const TYPE_META = {
     marriage: { label: '결혼·부부', short: '부부', group: 'core', desc: '부부·동반자 구조' },
     parent: { label: '부모 → 자녀', short: '부모→자녀', group: 'core', desc: '부모-자녀 하위 구조' },
@@ -8,7 +8,10 @@
     divorced: { label: '이혼', short: '이혼', group: 'core', desc: '분리선 2개' },
     distant: { label: '소원·불명확', short: '소원', group: 'optional', desc: '점선' },
     close: { label: '친밀·지지', short: '친밀', group: 'optional', desc: '굵은선' },
-    conflict: { label: '갈등·적대', short: '갈등', group: 'optional', desc: '지그재그' }
+    conflict: { label: '갈등·적대', short: '갈등', group: 'optional', desc: '지그재그' },
+    enmeshed: { label: '밀착·융합', short: '밀착', group: 'optional', desc: '매우 가깝고 경계가 약한 관계' },
+    cutoff: { label: '단절·관계 끊김', short: '단절', group: 'optional', desc: '정서적 접촉이 끊긴 관계' },
+    close_conflict: { label: '친밀하지만 갈등', short: '친밀+갈등', group: 'optional', desc: '가까움과 갈등이 함께 있는 관계' }
   };
 
   const escRel = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -86,9 +89,12 @@
         <option value="divorced">이혼</option>
       </optgroup>
       <optgroup label="관계 특성 · 선택">
-        <option value="distant">소원·불명확</option>
         <option value="close">친밀·지지</option>
+        <option value="enmeshed">밀착·융합</option>
+        <option value="distant">소원·불명확</option>
+        <option value="cutoff">단절·관계 끊김</option>
         <option value="conflict">갈등·적대</option>
+        <option value="close_conflict">친밀하지만 갈등</option>
       </optgroup>`;
   }
 
@@ -109,7 +115,7 @@
       <section class="relation-choice-section optional">
         <div class="relation-choice-head"><strong>관계 특성</strong><span class="rel-tag optional">선택</span></div>
         <p>관계의 질을 추가로 표시할 때만 선택하세요. 기본 관계선과 함께 사용할 수 있습니다.</p>
-        <div class="relation-choice-cards">${['distant','close','conflict'].map(card).join('')}</div>
+        <div class="relation-choice-cards">${['close','enmeshed','distant','cutoff','conflict','close_conflict'].map(card).join('')}</div>
       </section>
     </div>`;
     grid.dataset.classified = '1';
