@@ -14,7 +14,7 @@
   const VALID_LIFE = new Set(['alive','dead','unknown']);
   const VALID_COHABIT = new Set(['yes','no','unknown']);
   const VALID_GENDER = new Set(['male','female','unknown']);
-  const VALID_RELATION = new Set(['marriage','parent','separated','divorced','distant','close','conflict']);
+  const VALID_RELATION = new Set(['marriage','parent','separated','divorced','distant','close','conflict','enmeshed','cutoff','close_conflict']);
   const STRUCTURAL_PARTNER = new Set(['marriage','separated','divorced']);
   const selectedIds = new Set();
   let contextNodeId = null;
@@ -468,8 +468,9 @@
   relationDialog.querySelectorAll('[data-close-relation-edit]').forEach(b=>b.onclick=()=>relationDialog.close());
 
   function relationOptions(r) {
-    if(r.relationRole==='parent-child-emotional') return [['close','친밀·지지'],['distant','소원·불명확'],['conflict','갈등·적대']];
-    return [['marriage','실선 · 부부/동반자'],['separated','별거'],['divorced','이혼'],['distant','점선 · 소원/불명확'],['close','굵은선 · 친밀/지지'],['conflict','지그재그 · 갈등/적대']];
+    const emotional=[['close','친밀·지지'],['enmeshed','밀착·융합'],['distant','소원·불명확'],['cutoff','단절·관계 끊김'],['conflict','갈등·적대'],['close_conflict','친밀하지만 갈등']];
+    if(r.relationRole==='parent-child-emotional') return emotional;
+    return [['marriage','실선 · 부부/동반자'],['separated','별거'],['divorced','이혼'],...emotional];
   }
 
   relationLayer.addEventListener('dblclick', e => {
