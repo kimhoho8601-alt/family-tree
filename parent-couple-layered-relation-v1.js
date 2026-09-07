@@ -4,11 +4,14 @@
   document.documentElement.dataset.parentCoupleLayeredRelation = 'v1';
 
   const STRUCTURAL = new Set(['marriage','separated','divorced']);
-  const OPTIONAL = new Set(['distant','close','conflict']);
+  const OPTIONAL = new Set(['distant','close','conflict','enmeshed','cutoff','close_conflict']);
   const LABEL = {
     distant: '소원·불명확',
     close: '친밀·지지',
-    conflict: '갈등·적대'
+    conflict: '갈등·적대',
+    enmeshed: '밀착·융합',
+    cutoff: '단절·관계 끊김',
+    close_conflict: '친밀하지만 갈등'
   };
   const makeId = () => typeof id === 'function'
     ? id()
