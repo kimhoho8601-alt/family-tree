@@ -18,7 +18,6 @@
   }
 
   function canQuickAdd() {
-    if (!editPanel.classList.contains('active')) return false;
     if (typeof connectMode !== 'undefined' && (connectMode?.active || connectMode?.delete)) return false;
     return !personDialog.open;
   }
@@ -49,6 +48,7 @@
       beforeIds: new Set(state.people.map(p => p.id))
     };
     window.__PERSON_ADD_MODE__ = 'canvas-doubleclick';
+    if (!editPanel.classList.contains('active') && typeof activatePanel === 'function') activatePanel('editPanel');
     openPerson();
   }, true);
 
