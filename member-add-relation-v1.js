@@ -45,7 +45,10 @@
         <option value="divorced">이혼</option>
         <option value="distant">점선 · 소원/불명확</option>
         <option value="close">굵은선 · 친밀/지지</option>
+        <option value="enmeshed">3중선 · 밀착/융합</option>
+        <option value="cutoff">단절선 · 관계 끊김</option>
         <option value="conflict">지그재그 · 갈등/적대</option>
+        <option value="close_conflict">굵은선+지그재그 · 친밀하지만 갈등</option>
       </select></label>
     </div>
     <div class="member-parent-link" id="memberParentLink">
