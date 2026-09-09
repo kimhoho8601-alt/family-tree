@@ -12,7 +12,8 @@
       tab.tabIndex = active ? 0 : -1;
     });
     pages.forEach(page => { page.hidden = page.dataset.studioPage !== mode; });
-    document.title = mode === 'eco' ? '생태도 그리기 · 사례관계도 스튜디오' : '가계도 그리기 · 사례관계도 스튜디오';
+    document.title = mode === 'eco' ? '생태도 그리기 · 사례관계도 스튜디오' : mode === 'combined' ? '가계도 + 생태도 · 사례관계도 스튜디오' : '가계도 그리기 · 사례관계도 스튜디오';
+    document.dispatchEvent(new CustomEvent('studio-mode-change', { detail: { mode } }));
   }
 
   tabs.forEach((tab, index) => {
