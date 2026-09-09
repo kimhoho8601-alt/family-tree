@@ -5,7 +5,7 @@
   const strengthNames={strong:'강한 지지',normal:'일반·보통',weak:'약함·취약',stress:'긴장·갈등'};
   const directionNames={both:'상호 교류',in:'가족에게 유입',out:'가족에서 외부로 제공',none:'방향 없음'};
   const fresh=()=>({center:{name:'피해아동 및 가족',x:550,y:350},systems:[],selected:null});
-  let state=fresh(),drag=null;
+  let state=fresh(),drag=null,editClickTimer=null;
   try{const saved=JSON.parse(localStorage.getItem(key));if(saved?.center&&Array.isArray(saved.systems))state=saved;}catch{}
   const makeId=()=>crypto.randomUUID?.()||Date.now().toString(36)+Math.random().toString(36).slice(2);
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -39,8 +39,9 @@
   q('#ecoDeleteSystem').addEventListener('click',()=>{const item=selected();if(!item||!confirm(`${item.name} 환경체계를 삭제할까요?`))return;state.systems=state.systems.filter(system=>system.id!==item.id);state.selected=null;save();render();});
   q('#ecoSystemList').addEventListener('click',event=>{const button=event.target.closest('[data-eco-list]');if(button)choose(button.dataset.ecoList);});
   relationLayer.addEventListener('click',event=>{const group=event.target.closest('[data-eco-relation]');if(group)choose(group.dataset.ecoRelation);});
-  svg.addEventListener('pointerdown',event=>{const node=event.target.closest('.eco-node');if(!node)return;event.preventDefault();const p=point(event),item=node.hasAttribute('data-eco-center')?state.center:state.systems.find(system=>system.id===node.dataset.ecoNode);if(!item)return;if(node.dataset.ecoNode)state.selected=node.dataset.ecoNode;drag={item,dx:p.x-item.x,dy:p.y-item.y,pointerId:event.pointerId};svg.setPointerCapture(event.pointerId);render();});
-  svg.addEventListener('dblclick',event=>{const node=event.target.closest('.eco-node.system');if(!node)return;event.preventDefault();const item=state.systems.find(system=>system.id===node.dataset.ecoNode);if(!item||typeof openResourceGridEditor!=='function')return;openResourceGridEditor(item,next=>{item.name=next.name;item.note=next.memo;save();render()})});
+  svg.addEventListener('pointerdown',event=>{const node=event.target.closest('.eco-node');if(!node)return;event.preventDefault();const p=point(event),item=node.hasAttribute('data-eco-center')?state.center:state.systems.find(system=>system.id===node.dataset.ecoNode);if(!item)return;if(node.dataset.ecoNode){state.selected=node.dataset.ecoNode;nodeLayer.querySelectorAll('.eco-node.system').forEach(el=>el.classList.toggle('selected',el===node));}drag={item,dx:p.x-item.x,dy:p.y-item.y,pointerId:event.pointerId};svg.setPointerCapture(event.pointerId);});
+  svg.addEventListener('click',event=>{const node=event.target.closest('.eco-node.system');if(!node)return;clearTimeout(editClickTimer);editClickTimer=setTimeout(()=>choose(node.dataset.ecoNode),220)});
+  svg.addEventListener('dblclick',event=>{const node=event.target.closest('.eco-node.system');if(!node)return;clearTimeout(editClickTimer);event.preventDefault();const item=state.systems.find(system=>system.id===node.dataset.ecoNode);if(!item||typeof openResourceGridEditor!=='function')return;openResourceGridEditor(item,next=>{item.name=next.name;item.note=next.memo;save();render()})});
   svg.addEventListener('pointermove',event=>{if(!drag||event.pointerId!==drag.pointerId)return;const p=point(event);drag.item.x=Math.max(90,Math.min(1010,p.x-drag.dx));drag.item.y=Math.max(90,Math.min(610,p.y-drag.dy));render();});
   const endDrag=event=>{if(!drag||(event.pointerId!=null&&event.pointerId!==drag.pointerId))return;drag=null;save();};svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
   q('#ecoAutoArrange').addEventListener('click',autoArrange);
