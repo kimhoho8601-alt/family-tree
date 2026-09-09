@@ -1,0 +1,51 @@
+(() => {
+  const svg=document.querySelector('#ecomap'),nodeLayer=document.querySelector('#ecoNodeLayer'),relationLayer=document.querySelector('#ecoRelationLayer');
+  if(!svg||!nodeLayer||!relationLayer)return;
+  const q=s=>document.querySelector(s),key='case-relationship-studio-ecomap-v1';
+  const categories={family:{label:'가족·친족·이웃',color:'#7b5f68'},protection:{label:'아동보호·공공기관',color:'#c9002b'},education:{label:'학교·보육',color:'#236a8d'},health:{label:'의료·정신건강',color:'#3d7d67'},welfare:{label:'복지·경제·주거',color:'#956d24'},legal:{label:'경찰·법률',color:'#654a86'},community:{label:'지역사회·여가',color:'#7b6b37'}};
+  const strengthNames={strong:'강한 지지',normal:'일반·보통',weak:'약함·취약',stress:'긴장·갈등'};
+  const directionNames={both:'상호 교류',in:'가족에게 유입',out:'가족에서 외부로 제공',none:'방향 없음'};
+  const fresh=()=>({center:{name:'피해아동 및 가족',x:550,y:350},systems:[],selected:null});
+  let state=fresh(),drag=null;
+  try{const saved=JSON.parse(localStorage.getItem(key));if(saved?.center&&Array.isArray(saved.systems))state=saved;}catch{}
+  const makeId=()=>crypto.randomUUID?.()||Date.now().toString(36)+Math.random().toString(36).slice(2);
+  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function save(){localStorage.setItem(key,JSON.stringify(state));}
+  function selected(){return state.systems.find(item=>item.id===state.selected);}
+  function point(event){const p=svg.createSVGPoint();p.x=event.clientX;p.y=event.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+  function clippedPoints(system){const c=state.center,dx=system.x-c.x,dy=system.y-c.y,len=Math.max(1,Math.hypot(dx,dy)),ux=dx/len,uy=dy/len;return{a:{x:c.x+ux*86,y:c.y+uy*86},b:{x:system.x-ux*59,y:system.y-uy*59}};}
+  function zigzag(a,b){const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(1,Math.hypot(dx,dy)),nx=-dy/len*5,ny=dx/len*5,steps=Math.max(7,Math.floor(len/15));let d=`M${a.x} ${a.y}`;for(let i=1;i<steps;i++){const t=i/steps,s=i%2?1:-1;d+=` L${a.x+dx*t+nx*s} ${a.y+dy*t+ny*s}`;}return d+` L${b.x} ${b.y}`;}
+  function arrows(direction){if(direction==='both')return'marker-start="url(#ecoArrow)" marker-end="url(#ecoArrow)"';if(direction==='in')return'marker-start="url(#ecoArrow)"';if(direction==='out')return'marker-end="url(#ecoArrow)"';return'';}
+  function relationMarkup(system){const {a,b}=clippedPoints(system),straight=`M${a.x} ${a.y} L${b.x} ${b.y}`,d=system.strength==='stress'?zigzag(a,b):straight;return`<g class="eco-relation-group" data-eco-relation="${system.id}"><path class="eco-relation ${system.strength}" d="${d}" ${arrows(system.direction)}/><path class="eco-relation-hit" d="${d}"/></g>`;}
+  function textMarkup(name,y){const value=String(name||'이름 없음');if(value.length<=11)return`<text class="eco-name" y="${y}">${esc(value)}</text>`;const cut=Math.min(11,Math.ceil(value.length/2));return`<text class="eco-name" y="${y-8}"><tspan x="0">${esc(value.slice(0,cut))}</tspan><tspan x="0" dy="17">${esc(value.slice(cut,22))}</tspan></text>`;}
+  function nodeMarkup(system){const meta=categories[system.category]||categories.community;return`<g class="eco-node system ${state.selected===system.id?'selected':''}" data-eco-node="${system.id}" transform="translate(${system.x} ${system.y})" style="--eco-color:${meta.color}"><circle r="58"/>${textMarkup(system.name,-2)}<text class="eco-category" y="25">${esc(meta.label)}</text></g>`;}
+  function render(){
+    relationLayer.innerHTML=state.systems.map(relationMarkup).join('');
+    nodeLayer.innerHTML=`<g class="eco-node center" data-eco-center transform="translate(${state.center.x} ${state.center.y})"><circle r="84"/>${textMarkup(state.center.name,-3)}<text class="eco-category" y="29">중심체계</text></g>${state.systems.map(nodeMarkup).join('')}${state.systems.length?'':`<text class="eco-empty-label" x="550" y="485">왼쪽에서 환경체계를 추가하면 이곳에 표시됩니다</text>`}`;
+    const system=selected(),strength=q('#ecoRelationStrength'),direction=q('#ecoRelationDirection'),note=q('#ecoSystemNote'),del=q('#ecoDeleteSystem');
+    [strength,direction,note,del].forEach(el=>{if(el)el.disabled=!system;});
+    q('#ecoSelectedSystemLabel').textContent=system?`${system.name} 연결 설정`:'환경체계를 선택하세요';
+    if(system){strength.value=system.strength;direction.value=system.direction;note.value=system.note||'';}
+    q('#ecoCenterName').value=state.center.name;
+    q('#ecoSystemList').innerHTML=state.systems.length?state.systems.map(item=>{const meta=categories[item.category]||categories.community;return`<button type="button" class="eco-list-item ${state.selected===item.id?'active':''}" data-eco-list="${item.id}" style="--eco-color:${meta.color}"><i></i><span><b>${esc(item.name)}</b><small>${esc(meta.label)}</small></span><span>${strengthNames[item.strength]}</span></button>`;}).join(''):'<div class="eco-list-item"><i></i><span><b>등록된 환경체계가 없습니다</b><small>위 입력창이나 빠른 추가를 사용하세요</small></span></div>';
+  }
+  function choose(id){state.selected=id;render();save();}
+  function addSystem(name,category){name=String(name||'').trim();if(!name)return;const count=state.systems.length,angle=-Math.PI/2+count*(Math.PI*2/Math.max(6,count+1)),radius=count<8?245:305;const item={id:makeId(),name,category:categories[category]?category:'community',strength:'normal',direction:'both',note:'',x:state.center.x+Math.cos(angle)*radius,y:state.center.y+Math.sin(angle)*radius};state.systems.push(item);state.selected=item.id;save();render();}
+  function autoArrange(){const n=state.systems.length;if(!n)return;const radius=n<=7?245:Math.min(310,220+n*7);state.systems.forEach((item,index)=>{const angle=-Math.PI/2+index*Math.PI*2/n;item.x=state.center.x+Math.cos(angle)*radius;item.y=state.center.y+Math.sin(angle)*radius;});save();render();}
+  q('#ecoSystemForm').addEventListener('submit',event=>{event.preventDefault();addSystem(q('#ecoSystemName').value,q('#ecoSystemCategory').value);q('#ecoSystemName').value='';q('#ecoSystemName').focus();});
+  document.querySelectorAll('[data-eco-preset]').forEach(button=>button.addEventListener('click',()=>{const [name,category]=button.dataset.ecoPreset.split('|');if(state.systems.some(item=>item.name===name)){choose(state.systems.find(item=>item.name===name).id);return;}addSystem(name,category);}));
+  q('#ecoCenterName').addEventListener('input',event=>{state.center.name=event.target.value.trim()||'피해아동 및 가족';save();render();});
+  q('#ecoRelationStrength').addEventListener('change',event=>{const item=selected();if(!item)return;item.strength=event.target.value;save();render();});
+  q('#ecoRelationDirection').addEventListener('change',event=>{const item=selected();if(!item)return;item.direction=event.target.value;save();render();});
+  q('#ecoSystemNote').addEventListener('input',event=>{const item=selected();if(!item)return;item.note=event.target.value;save();});
+  q('#ecoDeleteSystem').addEventListener('click',()=>{const item=selected();if(!item||!confirm(`${item.name} 환경체계를 삭제할까요?`))return;state.systems=state.systems.filter(system=>system.id!==item.id);state.selected=null;save();render();});
+  q('#ecoSystemList').addEventListener('click',event=>{const button=event.target.closest('[data-eco-list]');if(button)choose(button.dataset.ecoList);});
+  relationLayer.addEventListener('click',event=>{const group=event.target.closest('[data-eco-relation]');if(group)choose(group.dataset.ecoRelation);});
+  svg.addEventListener('pointerdown',event=>{const node=event.target.closest('.eco-node');if(!node)return;event.preventDefault();const p=point(event),item=node.hasAttribute('data-eco-center')?state.center:state.systems.find(system=>system.id===node.dataset.ecoNode);if(!item)return;if(node.dataset.ecoNode)state.selected=node.dataset.ecoNode;drag={item,dx:p.x-item.x,dy:p.y-item.y,pointerId:event.pointerId};svg.setPointerCapture(event.pointerId);render();});
+  svg.addEventListener('pointermove',event=>{if(!drag||event.pointerId!==drag.pointerId)return;const p=point(event);drag.item.x=Math.max(90,Math.min(1010,p.x-drag.dx));drag.item.y=Math.max(90,Math.min(610,p.y-drag.dy));render();});
+  const endDrag=event=>{if(!drag||(event.pointerId!=null&&event.pointerId!==drag.pointerId))return;drag=null;save();};svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
+  q('#ecoAutoArrange').addEventListener('click',autoArrange);
+  q('#ecoResetBtn').addEventListener('click',()=>{if(!confirm('현재 생태도 작업을 모두 지우고 새로 만들까요?'))return;state=fresh();save();render();});
+  q('#ecoDownloadBtn').addEventListener('click',()=>{const clone=svg.cloneNode(true);clone.querySelector('.eco-grid')?.remove();clone.querySelectorAll('.eco-relation-hit').forEach(el=>el.remove());clone.setAttribute('width','1100');clone.setAttribute('height','700');const exportStyle=document.createElementNS('http://www.w3.org/2000/svg','style');exportStyle.textContent='.eco-node circle{fill:#fff;stroke:var(--eco-color,#5f5256);stroke-width:3}.eco-node.center circle{fill:#fff5f7;stroke:#c9002b;stroke-width:4}.eco-name{font:700 14px sans-serif;fill:#302528;text-anchor:middle}.eco-category{font:500 10px sans-serif;fill:#85777b;text-anchor:middle}.eco-relation{fill:none;stroke:#5d5054;stroke-width:2.5}.eco-relation.strong{stroke-width:6}.eco-relation.weak{stroke-dasharray:8 7}.eco-relation.stress{stroke:#c9002b;stroke-width:3}';clone.querySelector('defs')?.append(exportStyle);const source=new XMLSerializer().serializeToString(clone),blob=new Blob([source],{type:'image/svg+xml'}),url=URL.createObjectURL(blob),img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');canvas.width=2200;canvas.height=1400;const ctx=canvas.getContext('2d');ctx.scale(2,2);ctx.fillStyle='#fff';ctx.fillRect(0,0,1100,700);ctx.drawImage(img,0,0,1100,700);URL.revokeObjectURL(url);const link=document.createElement('a');link.download=`생태도_${new Date().toISOString().slice(0,10)}.png`;link.href=canvas.toDataURL('image/png');link.click();if(typeof toast==='function')toast('생태도를 PNG로 저장했습니다');};img.src=url;});
+  render();
+})();
