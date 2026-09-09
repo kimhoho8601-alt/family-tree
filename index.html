@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="styles.css?v=20260907-2" />
   <link rel="stylesheet" href="quick-entry.css" />
   <link rel="stylesheet" href="sticky-workspace-v1.css?v=20260828-1628" />
-  <link rel="stylesheet" href="studio-modes-v1.css?v=20260909-6" />
+  <link rel="stylesheet" href="studio-modes-v1.css?v=20260909-7" />
 </head>
 <body>
   <header class="topbar">
@@ -29,7 +29,6 @@
   <nav class="studio-switcher" aria-label="관계도 작업 선택" role="tablist">
     <div class="studio-switcher-head"><span>작업 선택</span><strong>어떤 관계도를 그릴까요?</strong></div>
     <button type="button" class="studio-mode-tab active" data-studio-mode="genogram" role="tab" aria-controls="genogramPage" aria-selected="true"><i>G</i><span><strong>가계도 그리기</strong><small>가족 구조·세대·관계 특성</small></span><b>시작하기 →</b></button>
-    <button type="button" class="studio-mode-tab" data-studio-mode="eco" role="tab" aria-controls="ecoPage" aria-selected="false"><i>E</i><span><strong>생태도 그리기</strong><small>아동·가족과 환경체계·자원 흐름</small></span><b>시작하기 →</b></button>
     <button type="button" class="studio-mode-tab studio-mode-tab-combined" data-studio-mode="combined" role="tab" aria-controls="combinedPage" aria-selected="false"><i>G+</i><span><strong>가계도 + 생태도</strong><small>가족 구성원과 자원·메모를 한 장에</small></span><b>종합 작성 →</b></button>
   </nav>
 
@@ -79,26 +78,9 @@
         <div id="combinedResourceList" class="eco-system-list"></div>
       </aside>
       <section class="combined-canvas-panel">
-        <div class="eco-toolbar"><div><strong>가계도 + 생태도 종합 편집</strong><small>가계도와 자원을 같은 그리드에서 끌어 배치하고 연결하세요</small></div><div><button type="button" id="combinedRefreshBtn">가계도 새로고침</button><button type="button" id="combinedAutoArrange">자동 배치</button><button type="button" id="combinedDownloadBtn" class="primary">PNG로 저장</button></div></div>
+        <div class="eco-toolbar"><div><strong>가계도 + 생태도 종합 편집</strong><small>자원은 더블클릭해 수정하고, 선 끝점을 구성원에게 끌어 연결하세요</small></div><div><button type="button" id="combinedRefreshBtn">가계도 새로고침</button><button type="button" id="combinedAutoArrange">자동 배치</button><button type="button" id="combinedDownloadBtn" class="primary">PNG로 저장</button></div></div>
         <div class="combined-canvas"><svg id="combinedMap" viewBox="0 0 1400 760" role="img" aria-label="가계도와 생태도 종합 관계도"><defs><pattern id="combinedGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M 28 0 L 0 0 0 28" fill="none" stroke="#f0e4e7" stroke-width="1"/></pattern><marker id="combinedArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5e5154"/></marker></defs><rect width="1400" height="760" fill="#fffdfd"/><rect class="combined-grid" width="1400" height="760" fill="url(#combinedGrid)"/><g id="combinedFamilyLayer"></g><g id="combinedRelationLayer"></g><g id="combinedResourceLayer"></g></svg></div>
-        <div class="combined-legend"><span><b>가계도 이동</b> 구성원을 잡으면 가족 전체 이동</span><span><b>자원 이동</b> 자원 상자를 원하는 위치로 이동</span><span><b>구성원 연결</b> 자원 선택 후 구성원 클릭</span></div>
-      </section>
-    </section>
-  </main>
-  <main id="ecoPage" class="studio-page" data-studio-page="eco" hidden>
-    <section class="eco-shell" aria-label="생태도 편집 작업공간">
-      <aside class="eco-sidebar">
-        <div class="eco-side-head"><div><span>ECOMAP</span><h2>생태도 구성</h2></div><button type="button" id="ecoResetBtn">새로 만들기</button></div>
-        <section class="eco-form-section"><div class="eco-section-title"><b>1</b><div><strong>중심체계</strong><small>피해아동과 가족을 표시합니다</small></div></div><label class="eco-field"><span>중심체계 이름</span><input id="ecoCenterName" maxlength="30" value="피해아동 및 가족"></label></section>
-        <section class="eco-form-section"><div class="eco-section-title"><b>2</b><div><strong>환경체계 추가</strong><small>현재 연결된 사람·기관·자원</small></div></div><form id="ecoSystemForm"><label class="eco-field"><span>환경체계 이름 <em>필수</em></span><input id="ecoSystemName" maxlength="24" required placeholder="예: 학교, 아동보호전문기관"></label><button type="submit" class="eco-add-button">＋ 환경체계 추가</button></form><div class="eco-presets" aria-label="빠른 추가"><button data-eco-preset="아동보호전문기관">아동보호전문기관</button><button data-eco-preset="학교·어린이집">학교·어린이집</button><button data-eco-preset="의료기관">의료기관</button><button data-eco-preset="경찰">경찰</button><button data-eco-preset="친족·지지자">친족·지지자</button></div></section>
-        <section class="eco-form-section eco-relation-editor" id="ecoRelationEditor"><div class="eco-section-title"><b>3</b><div><strong>관계와 자원 흐름</strong><small id="ecoSelectedSystemLabel">환경체계를 선택하세요</small></div></div><label class="eco-field"><span>관계 강도</span><select id="ecoRelationStrength" disabled><option value="strong">강한 지지</option><option value="normal">일반·보통</option><option value="weak">약함·취약</option><option value="stress">긴장·갈등</option></select></label><label class="eco-field"><span>자원 흐름</span><select id="ecoRelationDirection" disabled><option value="both">상호 교류</option><option value="in">가족에게 유입</option><option value="out">가족에서 외부로 제공</option><option value="none">방향 표시 없음</option></select></label><button type="button" id="ecoDeleteSystem" class="eco-delete-button" disabled>선택한 환경체계 삭제</button></section>
-        <div id="ecoSystemList" class="eco-system-list"></div>
-        <div class="privacy-note eco-privacy"><strong>개인정보 보호</strong><p>실명 대신 역할명이나 식별명을 사용하세요. 작업 내용은 현재 브라우저에만 저장됩니다.</p></div>
-      </aside>
-      <section class="eco-canvas-panel">
-        <div class="eco-toolbar"><div><strong>생태도 편집</strong><small>환경체계를 끌어 배치하고 선을 선택해 관계를 수정하세요</small></div><div><button type="button" id="ecoAutoArrange">자동 배치</button><button type="button" id="ecoDownloadBtn" class="primary">PNG로 저장</button></div></div>
-        <div class="eco-canvas" id="ecoCanvasWrap"><svg id="ecomap" viewBox="0 0 1100 700" role="img" aria-label="편집 가능한 아동·가족 생태도"><defs><pattern id="ecoGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M 28 0 L 0 0 0 28" fill="none" stroke="#f0e4e7" stroke-width="1"/></pattern><marker id="ecoArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5e5154"/></marker></defs><rect width="1100" height="700" fill="#fffdfd"/><rect class="eco-grid" width="1100" height="700" fill="url(#ecoGrid)"/><g id="ecoRelationLayer"></g><g id="ecoNodeLayer"></g></svg></div>
-        <div class="eco-legend"><b>관계선</b><span><i class="strong"></i>강한 지지</span><span><i class="normal"></i>일반·보통</span><span><i class="weak"></i>약함·취약</span><span><i class="stress"></i>긴장·갈등</span><em>화살표는 자원·에너지의 흐름을 나타냅니다.</em></div>
+        <div class="combined-legend"><span><b>가계도 이동</b> 구성원을 잡으면 가족 전체 이동</span><span><b>자원 편집</b> 자원 상자를 더블클릭해 수정</span><span><b>구성원 연결</b> 선 끝의 원을 구성원에게 드래그</span></div>
       </section>
     </section>
   </main>
@@ -131,7 +113,6 @@
   <script src="direct-node-connect-v1.js?v=20260907-2"></script>
   <script src="studio-modes-v1.js?v=20260909-2"></script>
   <script src="resource-grid-edit-v1.js?v=20260909-3"></script>
-  <script src="ecomap-v1.js?v=20260909-5"></script>
-  <script src="combined-map-v1.js?v=20260909-6"></script>
+  <script src="combined-map-v1.js?v=20260909-7"></script>
 </body>
 </html>
