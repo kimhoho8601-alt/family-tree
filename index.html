@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="styles.css?v=20260907-2" />
   <link rel="stylesheet" href="quick-entry.css" />
   <link rel="stylesheet" href="sticky-workspace-v1.css?v=20260828-1628" />
-  <link rel="stylesheet" href="studio-modes-v1.css?v=20260908-1" />
+  <link rel="stylesheet" href="studio-modes-v1.css?v=20260909-2" />
 </head>
 <body>
   <header class="topbar">
@@ -30,6 +30,7 @@
     <div class="studio-switcher-head"><span>작업 선택</span><strong>어떤 관계도를 그릴까요?</strong></div>
     <button type="button" class="studio-mode-tab active" data-studio-mode="genogram" role="tab" aria-controls="genogramPage" aria-selected="true"><i>G</i><span><strong>가계도 그리기</strong><small>가족 구조·세대·관계 특성</small></span><b>시작하기 →</b></button>
     <button type="button" class="studio-mode-tab" data-studio-mode="eco" role="tab" aria-controls="ecoPage" aria-selected="false"><i>E</i><span><strong>생태도 그리기</strong><small>아동·가족과 환경체계·자원 흐름</small></span><b>시작하기 →</b></button>
+    <button type="button" class="studio-mode-tab studio-mode-tab-combined" data-studio-mode="combined" role="tab" aria-controls="combinedPage" aria-selected="false"><i>G+</i><span><strong>가계도 + 생태도</strong><small>가족 구성원과 자원·메모를 한 장에</small></span><b>종합 작성 →</b></button>
   </nav>
 
   <main id="genogramPage" class="studio-page" data-studio-page="genogram">
@@ -65,6 +66,23 @@
         <div id="connectionBar" class="connection-bar" hidden><div class="connection-copy"><b id="connectionGuide">첫 번째 구성원을 선택하세요</b><small>두 구성원을 선택한 다음 연결선 종류를 정합니다.</small></div><button type="button" id="cancelConnectBtn">연결 취소</button></div>
         <div class="canvas-wrap" id="canvasWrap"><svg id="genogram" viewBox="0 0 1200 720" role="img" aria-label="편집 가능한 가족 가계도"><defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#eadde0" stroke-width="1"/></pattern></defs><rect width="1200" height="720" fill="#fffdfd"/><rect class="canvas-grid" width="1200" height="720" fill="url(#grid)"/><g id="relationLayer"></g><g id="nodeLayer"></g></svg><div id="emptyState" class="empty-state"><div class="empty-symbol"><span></span><i></i><b></b></div><strong>왼쪽 정보만 입력하면 바로 그려집니다</strong><p>아동·부모 정보와 가족 상태를 한 번에 입력하세요.</p><button class="button primary" id="emptyAddBtn">빠른 작성 시작</button></div></div>
         <div class="legend"><b>기호</b><span><i class="male"></i>남성</span><span><i class="female"></i>여성</span><span><i class="double"></i>대상자</span><span><i class="dead">×</i>사망</span><span><i class="conflict"></i>갈등</span></div>
+      </section>
+    </section>
+  </main>
+  <main id="combinedPage" class="studio-page" data-studio-page="combined" hidden>
+    <section class="combined-shell" aria-label="가계도와 생태도 종합 편집 작업공간">
+      <aside class="combined-sidebar">
+        <div class="combined-side-head"><div><span>GENO + ECO</span><h2>종합 관계도 구성</h2></div><button type="button" id="combinedResetBtn">자원 초기화</button></div>
+        <div class="combined-guide"><b>가계도는 자동으로 연동됩니다</b><p>가계도 탭에서 만든 구성원을 기준으로 자원과 메모를 연결하세요.</p><button type="button" id="combinedGoGenogram">가계도 구성원 편집 →</button></div>
+        <section class="combined-form-section"><div class="eco-section-title"><b>1</b><div><strong>자원 추가</strong><small>기관·사람·서비스를 구분해 등록</small></div></div><form id="combinedResourceForm"><label class="eco-field"><span>자원 이름 <em>필수</em></span><input id="combinedResourceName" maxlength="24" required placeholder="예: 아동보호전문기관"></label><label class="eco-field"><span>자원 영역</span><select id="combinedResourceCategory"><option value="protection">아동보호·공공기관</option><option value="education">학교·보육</option><option value="health">의료·정신건강</option><option value="welfare">복지·경제·주거</option><option value="legal">경찰·법률</option><option value="family">친족·이웃·지지자</option><option value="community">지역사회·여가</option></select></label><button type="submit" class="eco-add-button">＋ 자원 추가</button></form></section>
+        <section class="combined-form-section"><div class="eco-section-title"><b>2</b><div><strong>연결 대상과 관계</strong><small id="combinedSelectedLabel">자원을 선택하세요</small></div></div><label class="eco-field"><span>연결 대상</span><select id="combinedTarget" disabled><option value="family">가족 전체</option></select></label><label class="eco-field"><span>관계 강도</span><select id="combinedStrength" disabled><option value="strong">강한 지지</option><option value="normal">일반·보통</option><option value="weak">약함·취약</option><option value="stress">긴장·갈등</option></select></label><label class="eco-field"><span>자원 흐름</span><select id="combinedDirection" disabled><option value="both">상호 교류</option><option value="in">가족에게 유입</option><option value="out">가족에서 자원으로 제공</option><option value="none">방향 표시 없음</option></select></label><button type="button" id="combinedDeleteResource" class="eco-delete-button" disabled>선택한 자원 삭제</button></section>
+        <section class="combined-form-section combined-memo-form"><div class="eco-section-title"><b>3</b><div><strong>메모</strong><small>자원과 분리되어 하단에 표시</small></div></div><label class="eco-field"><span>메모 내용</span><textarea id="combinedMemo" maxlength="110" disabled placeholder="확인된 지원 내용이나 위험 요인을 기록하세요"></textarea></label></section>
+        <div id="combinedResourceList" class="eco-system-list"></div>
+      </aside>
+      <section class="combined-canvas-panel">
+        <div class="eco-toolbar"><div><strong>가계도 + 생태도 종합 편집</strong><small>가족 구조, 자원 연결, 사례 메모를 서로 겹치지 않게 한 장에 정리합니다</small></div><div><button type="button" id="combinedRefreshBtn">가계도 새로고침</button><button type="button" id="combinedAutoArrange">자원 정리</button><button type="button" id="combinedDownloadBtn" class="primary">PNG로 저장</button></div></div>
+        <div class="combined-canvas"><svg id="combinedMap" viewBox="0 0 1400 900" role="img" aria-label="가계도와 생태도 종합 관계도"><defs><pattern id="combinedGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M 28 0 L 0 0 0 28" fill="none" stroke="#f0e4e7" stroke-width="1"/></pattern><marker id="combinedArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#5e5154"/></marker></defs><rect width="1400" height="900" fill="#fffdfd"/><rect class="combined-grid" width="1400" height="900" fill="url(#combinedGrid)"/><g id="combinedRelationLayer"></g><g id="combinedFamilyLayer"></g><g id="combinedResourceLayer"></g><g id="combinedMemoLayer"></g></svg></div>
+        <div class="combined-legend"><span><b>가계도 영역</b> 구성원·가족관계</span><span><b>자원 영역</b> 기관·사람·서비스</span><span><b>메모 영역</b> 확인 내용·위험 요인</span></div>
       </section>
     </section>
   </main>
@@ -111,7 +129,8 @@
   <script src="canvas-doubleclick-add-v1.js?v=20260907-3"></script>
   <script src="regression-fixes-v1.js?v=20260907-1"></script>
   <script src="direct-node-connect-v1.js?v=20260907-2"></script>
-  <script src="studio-modes-v1.js?v=20260908-1"></script>
+  <script src="studio-modes-v1.js?v=20260909-2"></script>
   <script src="ecomap-v1.js?v=20260908-1"></script>
+  <script src="combined-map-v1.js?v=20260909-2"></script>
 </body>
 </html>
