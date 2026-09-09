@@ -93,7 +93,7 @@
         if(type==='separated'||type==='divorced'){
           marks=`<path d="M${startX-7} ${startY-13}l14 26${type==='divorced'?`M${startX+3} ${startY-13}l14 26`:''}" fill="none" stroke="#c9002b" stroke-width="3"/>`;
         }
-        markup+=`<g class="relation-group" ${couple?`data-relation="${couple.id}"`:''}><path d="M${left.x} ${left.y} L${right.x} ${right.y}" class="relation ${type}" fill="none" stroke="${strokeFor(type)}" stroke-width="3" ${type==='distant'?'stroke-dasharray="8 7"':''}/>${marks}<path class="relation-hit" d="M${left.x} ${left.y} L${right.x} ${right.y}" fill="none" stroke="transparent" stroke-width="18"/></g>`;
+        markup+=`<g class="relation-group" ${couple?`data-relation="${couple.id}"`:`data-implicit-couple="${left.id}|${right.id}"`}><path d="M${left.x} ${left.y} L${right.x} ${right.y}" class="relation ${type}" fill="none" stroke="${strokeFor(type)}" stroke-width="3" ${type==='distant'?'stroke-dasharray="8 7"':''}/>${marks}<path class="relation-hit" d="M${left.x} ${left.y} L${right.x} ${right.y}" fill="none" stroke="transparent" stroke-width="18"/></g>`;
       }
 
       const minChildX=Math.min(startX,...children.map(c=>c.x));
@@ -132,6 +132,27 @@
       save();render();stopConnection();toast('선택한 연결선을 삭제했습니다');
     });
   };
+
+  // 부모-자녀 구조 때문에 화면에만 생긴 기본 부부선도 선택하는 즉시
+  // 실제 관계 데이터로 등록해 삭제 후 다시 그린 선을 바로 수정할 수 있게 한다.
+  els.relations.addEventListener('click', event => {
+    const group = event.target.closest?.('.relation-group[data-implicit-couple]');
+    if (!group || connectMode.delete || connectMode.active) return;
+    const [from, to] = group.dataset.implicitCouple.split('|');
+    if (!findPerson(from) || !findPerson(to)) return;
+    let relation = state.relations.find(item => structuralPartnerTypes.includes(item.type) && ((item.from === from && item.to === to) || (item.from === to && item.to === from)));
+    if (!relation) {
+      relation = { id: id(), from, to, type: 'marriage' };
+      state.relations.push(relation);
+      save();
+      render();
+    }
+    selectedRelationIds = [relation.id];
+    els.relations.querySelector(`.relation-group[data-relation="${relation.id}"]`)?.classList.add('relation-selected');
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    toast('기본 부부선을 선택했습니다. 선 수정으로 변경할 수 있습니다');
+  }, true);
 
   // Re-render once so existing saved diagrams immediately use the corrected path.
   render();
