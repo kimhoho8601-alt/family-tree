@@ -21,12 +21,17 @@
   align-self:start;
   height:calc(100vh - var(--app-header-h) - 24px);
   max-height:calc(100vh - var(--app-header-h) - 24px);
-  overflow-y:auto;
+  overflow:hidden;
   overscroll-behavior:contain;
   scrollbar-gutter:stable;
   background:#fff;
   z-index:420;
 }
+
+/* Keep the quick/detail tabs fixed while only the active editor body scrolls. */
+.sidebar>.mode-tabs{flex:0 0 auto;width:100%;margin-bottom:10px}
+.sidebar>.side-panel.active{display:block;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+.sidebar>.privacy-note{flex:0 0 auto}
 
 /* The main editing controls remain directly below the global header. */
 .canvas-toolbar{
@@ -62,6 +67,7 @@
     overflow:visible;
     scrollbar-gutter:auto;
   }
+  .sidebar>.side-panel.active{overflow:visible;padding-right:0}
   .canvas-toolbar{top:var(--app-header-h)}
 }
 
