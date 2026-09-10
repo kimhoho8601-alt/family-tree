@@ -4,7 +4,7 @@
     { type: 'combined', svg: document.querySelector('#combinedMap'), viewport: document.querySelector('.combined-canvas'), width: 1400, height: 760, focusX: 640, focusY: 355 }
   ].filter(item => item.svg && item.viewport);
 
-  const interactive = '.node,.relation-group,.combined-resource,[data-line-handle],.cohabit-boundary-v3,.junction-handle,.cohabit-move-handle,.cohabit-resize-handle,.cohabit-touch-hit,.mobile-canvas-controls';
+  const interactive = '.node,.combined-resource,[data-line-handle],.junction-handle,.cohabit-move-handle,.cohabit-resize-handle,.cohabit-touch-hit,.mobile-canvas-controls';
 
   canvases.forEach(({ type, svg, viewport, width, height, focusX, focusY }) => {
     let pan = null;
@@ -12,6 +12,7 @@
     let pinchGesture = false;
     let scale = 1;
     let lastTap = null;
+    let touchPan = null;
     const pointers = new Map();
 
     const controls = document.createElement('div');
@@ -126,6 +127,24 @@
     };
     viewport.addEventListener('pointerup', stop, true);
     viewport.addEventListener('pointercancel', stop, true);
+
+    // Pointer Events can be interrupted by nested SVG handlers on some mobile browsers.
+    // Keep a touch-native fallback so one-finger canvas movement remains available.
+    viewport.addEventListener('touchstart', event => {
+      if (event.touches.length !== 1 || event.target.closest?.(interactive)) { touchPan = null; return; }
+      const touch = event.touches[0];
+      touchPan = { startX: touch.clientX, startY: touch.clientY, scrollLeft: viewport.scrollLeft, scrollTop: viewport.scrollTop };
+    }, { capture: true, passive: true });
+    viewport.addEventListener('touchmove', event => {
+      if (!touchPan || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      event.preventDefault();
+      viewport.scrollLeft = touchPan.scrollLeft - (touch.clientX - touchPan.startX);
+      viewport.scrollTop = touchPan.scrollTop - (touch.clientY - touchPan.startY);
+    }, { capture: true, passive: false });
+    const stopTouchPan = () => { touchPan = null; };
+    viewport.addEventListener('touchend', stopTouchPan, true);
+    viewport.addEventListener('touchcancel', stopTouchPan, true);
 
     svg.addEventListener('pointerup', event => {
       if (!['touch', 'pen'].includes(event.pointerType) || pinch || pointers.size) return;
