@@ -90,7 +90,10 @@
     }
     if (!firstId) { markFirst(current.id); return; }
     if (firstId === current.id) { clearDirectSelection(); return; }
-    const alreadyConnected=state.relations.some(relation=>(relation.from===firstId&&relation.to===current.id)||(relation.from===current.id&&relation.to===firstId));
+    const directRelation=state.relations.some(relation=>(relation.from===firstId&&relation.to===current.id)||(relation.from===current.id&&relation.to===firstId));
+    const firstChildren=new Set(state.relations.filter(relation=>relation.type==='parent'&&relation.from===firstId).map(relation=>relation.to));
+    const sharedChild=state.relations.some(relation=>relation.type==='parent'&&relation.from===current.id&&firstChildren.has(relation.to));
+    const alreadyConnected=directRelation||sharedChild;
     if(alreadyConnected){const a=state.people.find(person=>person.id===firstId),b=state.people.find(person=>person.id===current.id);clearDirectSelection();if(typeof toast==='function')toast(`${a?.name||'구성원'}와 ${b?.name||'구성원'}은 이미 연결되어 있습니다`);return;}
     openChoice(firstId, current.id);
   }, true);
