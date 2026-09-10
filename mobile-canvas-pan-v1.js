@@ -8,28 +8,32 @@
 
   canvases.forEach(({ type, svg, viewport, width, height, focusX, focusY }) => {
     let pan = null;
+    let pinch = null;
     let scale = 1;
     let lastTap = null;
+    const pointers = new Map();
 
     const controls = document.createElement('div');
     controls.className = 'mobile-canvas-controls';
     controls.setAttribute('aria-label', '캔버스 확대 및 축소');
-    controls.innerHTML = '<span>축소</span><input type="range" min="60" max="160" step="10" value="100" aria-label="캔버스 확대 축소"><output>100%</output><button type="button" data-canvas-zoom="fit">맞춤</button>';
+    controls.innerHTML = '<span>축소</span><input type="range" min="60" max="160" step="1" value="100" aria-label="캔버스 확대 축소"><output>100%</output><button type="button" data-canvas-zoom="fit">맞춤</button>';
     viewport.append(controls);
 
-    const applyScale = next => {
+    const applyScale = (next, anchor = null) => {
       const oldWidth = width * scale;
       const oldHeight = height * scale;
-      const centerX = (viewport.scrollLeft + viewport.clientWidth / 2) / oldWidth;
-      const centerY = (viewport.scrollTop + viewport.clientHeight / 2) / oldHeight;
-      scale = Math.max(.6, Math.min(1.6, Math.round(next * 10) / 10));
+      const localX = anchor ? anchor.x - viewport.getBoundingClientRect().left : viewport.clientWidth / 2;
+      const localY = anchor ? anchor.y - viewport.getBoundingClientRect().top : viewport.clientHeight / 2;
+      const centerX = (viewport.scrollLeft + localX) / oldWidth;
+      const centerY = (viewport.scrollTop + localY) / oldHeight;
+      scale = Math.max(.6, Math.min(1.6, Math.round(next * 100) / 100));
       svg.style.setProperty('--mobile-canvas-width', `${width * scale}px`);
       svg.style.setProperty('--mobile-canvas-height', `${height * scale}px`);
       controls.querySelector('input').value = Math.round(scale * 100);
       controls.querySelector('output').textContent = `${Math.round(scale * 100)}%`;
       requestAnimationFrame(() => {
-        viewport.scrollLeft = Math.max(0, centerX * width * scale - viewport.clientWidth / 2);
-        viewport.scrollTop = Math.max(0, centerY * height * scale - viewport.clientHeight / 2);
+        viewport.scrollLeft = Math.max(0, centerX * width * scale - localX);
+        viewport.scrollTop = Math.max(0, centerY * height * scale - localY);
       });
     };
     controls.querySelector('input').addEventListener('input', event => applyScale(Number(event.target.value) / 100));
@@ -58,6 +62,16 @@
 
     svg.addEventListener('pointerdown', event => {
       if (!['touch', 'pen'].includes(event.pointerType) || event.button !== 0) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinch = { distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), scale };
+        pan = null;
+        viewport.classList.remove('is-touch-panning');
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       if (event.target.closest?.(interactive)) return;
       pan = {
         pointerId: event.pointerId,
@@ -72,6 +86,15 @@
     }, true);
 
     svg.addEventListener('pointermove', event => {
+      if (pointers.has(event.pointerId)) pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pinch && pointers.size >= 2) {
+        const [a, b] = [...pointers.values()];
+        const distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+        event.preventDefault();
+        event.stopPropagation();
+        applyScale(pinch.scale * distance / pinch.distance, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+        return;
+      }
       if (!pan || event.pointerId !== pan.pointerId) return;
       const dx = event.clientX - pan.startX;
       const dy = event.clientY - pan.startY;
@@ -83,6 +106,8 @@
     }, { capture: true, passive: false });
 
     const stop = event => {
+      pointers.delete(event.pointerId);
+      if (pointers.size < 2) pinch = null;
       if (!pan || (event.pointerId != null && event.pointerId !== pan.pointerId)) return;
       pan = null;
       viewport.classList.remove('is-touch-panning');
@@ -91,7 +116,7 @@
     svg.addEventListener('pointercancel', stop, true);
 
     svg.addEventListener('pointerup', event => {
-      if (!['touch', 'pen'].includes(event.pointerType)) return;
+      if (!['touch', 'pen'].includes(event.pointerType) || pinch || pointers.size) return;
       const editable = event.target.closest?.(type === 'genogram' ? '.node[data-id]' : '.combined-resource[data-resource-id]');
       if (!editable) { lastTap = null; return; }
       const key = type === 'genogram' ? editable.dataset.id : editable.dataset.resourceId;
