@@ -52,6 +52,7 @@
       document.addEventListener('studio-mode-change', event => {
         if (event.detail?.mode === 'combined') requestAnimationFrame(centerView);
       });
+      document.addEventListener('combined-family-imported', () => requestAnimationFrame(centerView));
       if (document.body.dataset.studioMode === 'combined') setTimeout(centerView, 0);
     }
 
