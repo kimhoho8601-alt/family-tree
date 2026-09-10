@@ -76,6 +76,7 @@
   }
 
   els.nodes.addEventListener('pointerdown', event => {
+    if (window.__COHABIT_PICK_MODE__) return;
     if (typeof connectMode !== 'undefined' && (connectMode.active || connectMode.delete)) return;
     const node = event.target.closest?.('.node');
     if (!node) return;

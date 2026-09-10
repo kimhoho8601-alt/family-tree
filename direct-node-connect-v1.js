@@ -54,7 +54,8 @@
   }
 
   els.svg.addEventListener('pointerdown', event => {
-    if (event.button !== 0) { press = null; return; }
+    if (window.__COHABIT_PICK_MODE__) { press = null; return; }
+    if (event.pointerType !== 'touch' && event.button !== 0) { press = null; return; }
     if (typeof connectMode !== 'undefined' && (connectMode.active || connectMode.delete)) { press = null; return; }
     const node = event.target.closest?.('.node');
     const junction = event.target.closest?.('.junction-handle');
@@ -64,6 +65,7 @@
   }, true);
 
   els.svg.addEventListener('pointerup', event => {
+    if (window.__COHABIT_PICK_MODE__) { press = null; return; }
     if (!press || event.pointerId !== press.pointerId) return;
     const current = press;
     press = null;
@@ -88,6 +90,8 @@
     }
     if (!firstId) { markFirst(current.id); return; }
     if (firstId === current.id) { clearDirectSelection(); return; }
+    const alreadyConnected=state.relations.some(relation=>(relation.from===firstId&&relation.to===current.id)||(relation.from===current.id&&relation.to===firstId));
+    if(alreadyConnected){const a=state.people.find(person=>person.id===firstId),b=state.people.find(person=>person.id===current.id);clearDirectSelection();if(typeof toast==='function')toast(`${a?.name||'구성원'}와 ${b?.name||'구성원'}은 이미 연결되어 있습니다`);return;}
     openChoice(firstId, current.id);
   }, true);
 

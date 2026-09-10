@@ -114,6 +114,7 @@
   // Multi-select + group drag
   // -----------------------------
   nodeLayer.addEventListener('pointerdown', e => {
+    if (window.__COHABIT_PICK_MODE__) return;
     const node = e.target.closest?.('.node');
     if (!node) return;
     const id = node.dataset.id;
