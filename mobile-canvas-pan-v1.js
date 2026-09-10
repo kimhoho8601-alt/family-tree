@@ -9,6 +9,7 @@
   canvases.forEach(({ type, svg, viewport, width, height, focusX, focusY }) => {
     let pan = null;
     let pinch = null;
+    let pinchGesture = false;
     let scale = 1;
     let lastTap = null;
     const pointers = new Map();
@@ -66,6 +67,7 @@
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
         pinch = { distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), scale };
+        pinchGesture = true;
         pan = null;
         viewport.classList.remove('is-touch-panning');
         event.preventDefault();
@@ -108,6 +110,14 @@
     const stop = event => {
       pointers.delete(event.pointerId);
       if (pointers.size < 2) pinch = null;
+      if (pinchGesture) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        pan = null;
+        viewport.classList.remove('is-touch-panning');
+        if (!pointers.size) pinchGesture = false;
+        return;
+      }
       if (!pan || (event.pointerId != null && event.pointerId !== pan.pointerId)) return;
       pan = null;
       viewport.classList.remove('is-touch-panning');
