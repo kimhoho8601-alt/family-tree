@@ -61,8 +61,10 @@
       if (document.body.dataset.studioMode === 'combined') setTimeout(centerView, 0);
     }
 
-    svg.addEventListener('pointerdown', event => {
-      if (!['touch', 'pen'].includes(event.pointerType) || event.button !== 0) return;
+    viewport.addEventListener('pointerdown', event => {
+      if (!['touch', 'pen'].includes(event.pointerType)) return;
+      if (event.pointerType !== 'touch' && event.button !== 0) return;
+      if (event.target.closest?.('.mobile-canvas-controls')) return;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (pointers.size === 2) {
         const [a, b] = [...pointers.values()];
@@ -83,11 +85,11 @@
         scrollTop: viewport.scrollTop,
         moved: false
       };
-      svg.setPointerCapture?.(event.pointerId);
+      viewport.setPointerCapture?.(event.pointerId);
       viewport.classList.add('is-touch-panning');
     }, true);
 
-    svg.addEventListener('pointermove', event => {
+    viewport.addEventListener('pointermove', event => {
       if (pointers.has(event.pointerId)) pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (pinch && pointers.size >= 2) {
         const [a, b] = [...pointers.values()];
@@ -122,8 +124,8 @@
       pan = null;
       viewport.classList.remove('is-touch-panning');
     };
-    svg.addEventListener('pointerup', stop, true);
-    svg.addEventListener('pointercancel', stop, true);
+    viewport.addEventListener('pointerup', stop, true);
+    viewport.addEventListener('pointercancel', stop, true);
 
     svg.addEventListener('pointerup', event => {
       if (!['touch', 'pen'].includes(event.pointerType) || pinch || pointers.size) return;
