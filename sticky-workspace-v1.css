@@ -8,20 +8,11 @@
   box-shadow:0 4px 16px rgba(55,28,34,.05);
 }
 
-/* overflow:hidden prevented descendants from using viewport sticky positioning. */
 .workspace{
   overflow:clip;
   align-items:start;
 }
 
-/*
- * Use ONE scroll container for the whole left rail.
- * Previously only .side-panel.active scrolled while the sidebar itself was
- * overflow:hidden. Once quick-entry sections 3/4 were removed, moving the
- * pointer onto the lower sidebar/privacy area left the inner scroll container,
- * so wheel/trackpad input appeared to freeze. Keeping the sidebar itself as the
- * only scroller removes that dead zone and avoids nested-scroll lockups.
- */
 .sidebar{
   position:sticky;
   top:calc(var(--app-header-h) + 12px);
@@ -36,7 +27,6 @@
   z-index:420;
 }
 
-/* Tabs stay visible, but the panel no longer creates a second nested scroller. */
 .sidebar>.mode-tabs{
   position:sticky;
   top:0;
@@ -58,7 +48,6 @@
   margin-top:16px;
 }
 
-/* The main editing controls remain directly below the global header. */
 .canvas-toolbar{
   position:sticky;
   top:var(--app-header-h);
@@ -69,7 +58,13 @@
   box-shadow:0 4px 14px rgba(55,28,34,.045);
 }
 
-/* Keep cohabiting-family selection controls visible below the canvas toolbar. */
+/* Simplify the canvas toolbar: add people from quick/detail editing instead. */
+#canvasAddBtn{display:none!important}
+
+/* These helpers duplicate direct grid editing and are intentionally hidden. */
+#autoArrangeBtn,#auditBtn{display:none!important}
+.editor-tool-wrap:has(#autoArrangeBtn){display:none!important}
+
 #cohabitSelectionBar{
   position:sticky;
   top:calc(var(--app-header-h) + var(--canvas-toolbar-h));
@@ -107,7 +102,6 @@
 }
 #cohabitSelectionCreate{min-width:112px}
 
-/* When connection mode is active, keep its instructions under the tool bar. */
 .connection-bar{
   position:sticky;
   top:calc(var(--app-header-h) + 78px);
