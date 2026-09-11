@@ -38,7 +38,7 @@
   // grandparents are injected automatically into the quick-create save cycle.
   if (!document.querySelector('script[data-quick-grandparents-auto]')) {
     const s = document.createElement('script');
-    s.src = 'quick-grandparents-auto-v2.js?v=20260911-1';
+    s.src = 'quick-grandparents-auto-v2.js?v=20260911-2';
     s.dataset.quickGrandparentsAuto = 'v2';
     document.body.append(s);
   }
@@ -64,6 +64,14 @@
     const s = document.createElement('script');
     s.src = 'export-cleanup-v1.js?v=20260911-1';
     s.dataset.exportCleanup = 'v1';
+    document.body.append(s);
+  }
+
+  // Keep only the top PNG action visible and route it to the currently viewed mode.
+  if (!document.querySelector('script[data-unified-download]')) {
+    const s = document.createElement('script');
+    s.src = 'unified-download-v1.js?v=20260911-1';
+    s.dataset.unifiedDownload = 'v1';
     document.body.append(s);
   }
 
