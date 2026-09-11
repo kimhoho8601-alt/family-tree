@@ -1,4 +1,86 @@
 (() => {
+  const coarsePointer = matchMedia('(hover: none) and (pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  const tabletLike = coarsePointer && Math.max(window.innerWidth, window.innerHeight) <= 1600;
+
+  // Tablets such as iPad Pro can report a CSS viewport wider than 1180px in
+  // landscape. The old responsive CSS therefore treated them as desktop:
+  // the SVG fitted the viewport, there was no scrollable overflow, and the
+  // one-finger pan code had nowhere to move. Force the same scroll-canvas
+  // behavior used on mobile whenever the primary interaction is touch/coarse.
+  if (tabletLike && !document.querySelector('style[data-tablet-canvas-pan]')) {
+    document.documentElement.classList.add('touch-canvas-device');
+    const style = document.createElement('style');
+    style.dataset.tabletCanvasPan = 'v1';
+    style.textContent = `
+      html.touch-canvas-device .canvas-wrap,
+      html.touch-canvas-device .combined-canvas{
+        height:clamp(480px,68vh,680px)!important;
+        min-height:480px!important;
+        max-height:680px!important;
+        flex:none!important;
+        overflow:auto!important;
+        -webkit-overflow-scrolling:touch;
+        overscroll-behavior:contain;
+        scrollbar-width:thin;
+        touch-action:pan-x pan-y;
+      }
+      html.touch-canvas-device .canvas-wrap svg{
+        width:var(--mobile-canvas-width,1200px)!important;
+        min-width:var(--mobile-canvas-width,1200px)!important;
+        height:var(--mobile-canvas-height,720px)!important;
+        min-height:var(--mobile-canvas-height,720px)!important;
+        transform:none!important;
+      }
+      html.touch-canvas-device .combined-canvas svg{
+        width:var(--mobile-canvas-width,1400px)!important;
+        min-width:var(--mobile-canvas-width,1400px)!important;
+        height:var(--mobile-canvas-height,760px)!important;
+        min-height:var(--mobile-canvas-height,760px)!important;
+      }
+      html.touch-canvas-device .node,
+      html.touch-canvas-device .combined-resource,
+      html.touch-canvas-device .combined-family-copy .node,
+      html.touch-canvas-device .combined-line-handle,
+      html.touch-canvas-device .junction-handle,
+      html.touch-canvas-device .cohabit-resize-handle,
+      html.touch-canvas-device .cohabit-move-handle,
+      html.touch-canvas-device .cohabit-touch-hit{
+        touch-action:none;
+      }
+      html.touch-canvas-device .mobile-canvas-controls{
+        position:sticky;
+        left:12px;
+        bottom:12px;
+        z-index:12;
+        display:flex!important;
+        align-items:center;
+        gap:7px;
+        width:min(330px,calc(100vw - 44px));
+        margin:-58px 12px 12px auto;
+        padding:7px 8px;
+        border:1px solid #dfd4d7;
+        border-radius:12px;
+        background:rgba(255,255,255,.96);
+        box-shadow:0 8px 24px rgba(54,31,37,.16);
+        backdrop-filter:blur(8px);
+      }
+      html.touch-canvas-device .tool-actions #zoomOutBtn,
+      html.touch-canvas-device .tool-actions #zoomInBtn,
+      html.touch-canvas-device .tool-actions #fitBtn,
+      html.touch-canvas-device .tool-actions #zoomLabel{
+        display:none!important;
+      }
+      html.touch-canvas-device .canvas-toolbar,
+      html.touch-canvas-device .eco-toolbar{
+        position:sticky;
+        top:0;
+        z-index:4;
+        background:#fff;
+      }
+    `;
+    document.head.append(style);
+  }
+
   const canvases = [
     { type: 'genogram', svg: document.querySelector('#genogram'), viewport: document.querySelector('#canvasWrap'), width: 1200, height: 720, focusX: 600, focusY: 360 },
     { type: 'combined', svg: document.querySelector('#combinedMap'), viewport: document.querySelector('.combined-canvas'), width: 1400, height: 760, focusX: 640, focusY: 355 }
@@ -50,10 +132,13 @@
     });
 
     const centerView = () => {
-      if (!viewport.clientWidth || matchMedia('(min-width:1181px)').matches) return;
+      if (!viewport.clientWidth) return;
+      const desktopFinePointer = matchMedia('(min-width:1181px) and (hover:hover) and (pointer:fine)').matches && !tabletLike;
+      if (desktopFinePointer) return;
       viewport.scrollLeft = Math.max(0, focusX * scale - viewport.clientWidth / 2);
       viewport.scrollTop = Math.max(0, focusY * scale - viewport.clientHeight / 2);
     };
+    if (type === 'genogram' && tabletLike) requestAnimationFrame(centerView);
     if (type === 'combined') {
       document.addEventListener('studio-mode-change', event => {
         if (event.detail?.mode === 'combined') requestAnimationFrame(centerView);
@@ -128,7 +213,7 @@
     viewport.addEventListener('pointerup', stop, true);
     viewport.addEventListener('pointercancel', stop, true);
 
-    // Pointer Events can be interrupted by nested SVG handlers on some mobile browsers.
+    // Pointer Events can be interrupted by nested SVG handlers on some mobile/tablet browsers.
     // Keep a touch-native fallback so one-finger canvas movement remains available.
     viewport.addEventListener('touchstart', event => {
       if (event.touches.length !== 1 || event.target.closest?.(interactive)) { touchPan = null; return; }
