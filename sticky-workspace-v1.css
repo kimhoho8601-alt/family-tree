@@ -14,24 +14,49 @@
   align-items:start;
 }
 
-/* Left quick/detail editor follows the page and keeps its own inner scroll. */
+/*
+ * Use ONE scroll container for the whole left rail.
+ * Previously only .side-panel.active scrolled while the sidebar itself was
+ * overflow:hidden. Once quick-entry sections 3/4 were removed, moving the
+ * pointer onto the lower sidebar/privacy area left the inner scroll container,
+ * so wheel/trackpad input appeared to freeze. Keeping the sidebar itself as the
+ * only scroller removes that dead zone and avoids nested-scroll lockups.
+ */
 .sidebar{
   position:sticky;
   top:calc(var(--app-header-h) + 12px);
   align-self:start;
   height:calc(100vh - var(--app-header-h) - 24px);
   max-height:calc(100vh - var(--app-header-h) - 24px);
-  overflow:hidden;
-  overscroll-behavior:contain;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:auto;
   scrollbar-gutter:stable;
   background:#fff;
   z-index:420;
 }
 
-/* Keep the quick/detail tabs fixed while only the active editor body scrolls. */
-.sidebar>.mode-tabs{flex:0 0 auto;width:100%;margin-bottom:10px}
-.sidebar>.side-panel.active{display:block;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
-.sidebar>.privacy-note{flex:0 0 auto}
+/* Tabs stay visible, but the panel no longer creates a second nested scroller. */
+.sidebar>.mode-tabs{
+  position:sticky;
+  top:0;
+  z-index:430;
+  flex:0 0 auto;
+  width:100%;
+  margin-bottom:10px;
+  background:#f5f0f1;
+}
+.sidebar>.side-panel.active{
+  display:block;
+  flex:0 0 auto;
+  min-height:auto;
+  overflow:visible;
+  padding-right:4px;
+}
+.sidebar>.privacy-note{
+  flex:0 0 auto;
+  margin-top:16px;
+}
 
 /* The main editing controls remain directly below the global header. */
 .canvas-toolbar{
@@ -87,13 +112,6 @@
   position:sticky;
   top:calc(var(--app-header-h) + 78px);
   z-index:490;
-}
-
-/* Existing tab bar stays visible while the left panel itself scrolls. */
-.mode-tabs{
-  top:0;
-  z-index:430;
-  background:#f5f0f1;
 }
 
 @media(max-width:1200px) and (min-width:901px){
