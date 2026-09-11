@@ -27,6 +27,7 @@ body[data-studio-mode="combined"] .top-actions{
   align-self:start;
   height:calc(100vh - var(--app-header-h) - 24px);
   max-height:calc(100vh - var(--app-header-h) - 24px);
+  padding-top:0!important;
   overflow-x:hidden;
   overflow-y:auto;
   overscroll-behavior-y:auto;
@@ -36,9 +37,9 @@ body[data-studio-mode="combined"] .top-actions{
 }
 
 /*
- * Quick / detail mode tabs must stay visible at all times.
- * On desktop/tablet the sidebar itself scrolls, so top:0 pins them inside it.
- * Mobile overrides the top offset below so they stay directly under the global header.
+ * Quick / detail mode tabs stay flush to the very top of the sidebar.
+ * Removing the sidebar's top padding prevents scrolled form content from
+ * showing through above the sticky tab bar on PC, tablets, and phones.
  */
 .sidebar>.mode-tabs{
   position:sticky!important;
@@ -49,17 +50,28 @@ body[data-studio-mode="combined"] .top-actions{
   margin:0 0 10px;
   padding-top:8px;
   padding-bottom:8px;
-  background:rgba(255,255,255,.985)!important;
+  background:#fff!important;
   box-shadow:0 7px 14px rgba(55,28,34,.06);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
   isolation:isolate;
 }
+.sidebar>.mode-tabs::before{
+  content:"";
+  position:absolute;
+  left:-24px;
+  right:-24px;
+  top:0;
+  bottom:0;
+  z-index:-1;
+  background:#fff;
+  pointer-events:none;
+}
 .sidebar>.mode-tabs::after{
   content:"";
   position:absolute;
-  left:0;
-  right:0;
+  left:-24px;
+  right:-24px;
   bottom:0;
   height:1px;
   background:#eee3e6;
@@ -160,6 +172,7 @@ body[data-studio-mode="combined"] .top-actions{
     top:auto;
     height:auto;
     max-height:none;
+    padding-top:0!important;
     overflow:visible;
     scrollbar-gutter:auto;
   }
@@ -168,8 +181,10 @@ body[data-studio-mode="combined"] .top-actions{
     position:sticky!important;
     top:var(--app-header-h)!important;
     z-index:980!important;
+    margin-top:0!important;
     margin-left:0;
     margin-right:0;
+    background:#fff!important;
   }
   .sidebar>.side-panel.active{overflow:visible;padding-right:0}
   .canvas-toolbar{top:var(--app-header-h)}
@@ -185,10 +200,15 @@ body[data-studio-mode="combined"] .top-actions{
 
 /* Touch tablets can have a desktop-width viewport. Keep the sidebar tabs sticky
  * there as well, even when the mobile-canvas script marks the device explicitly. */
+html.touch-canvas-device .sidebar{
+  padding-top:0!important;
+}
 html.touch-canvas-device .sidebar>.mode-tabs{
   position:sticky!important;
   top:0!important;
   z-index:900!important;
+  margin-top:0!important;
+  background:#fff!important;
 }
 @media(max-width:900px){
   html.touch-canvas-device .sidebar>.mode-tabs{
