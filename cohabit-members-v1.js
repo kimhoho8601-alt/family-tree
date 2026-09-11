@@ -4,16 +4,21 @@
   if(!button||!bar)return;
   const chosen=new Set();let active=false;
   const validIds=()=>new Set(state.people.map(person=>person.id));
+  const pickVisualBackup=new WeakMap();
 
-  // During cohabiting-family selection, blue must always win over the normal
-  // proband/client red outline. Once selection mode ends the class is removed,
-  // so the original red target outline returns automatically.
+  // During cohabiting-family selection, blue must always win over every other
+  // editor/client selection style. CSS alone was not enough because added clients
+  // can also carry the advanced editor's red multi-selected state. Inline
+  // !important highlighting is applied only while this mode is active and then
+  // completely restored, so target/client red outlines return after creation.
   if(!document.querySelector('style[data-cohabit-pick-visual]')){
     const style=document.createElement('style');
-    style.dataset.cohabitPickVisual='v1';
+    style.dataset.cohabitPickVisual='v2';
     style.textContent=`
       .node.cohabit-pick-selected .shape,
       .node.cohabit-pick-selected .outer,
+      .node.multi-selected.cohabit-pick-selected .shape,
+      .node.multi-selected.cohabit-pick-selected .outer,
       .node.proband.cohabit-pick-selected .shape,
       .node.proband.cohabit-pick-selected .outer{
         stroke:#2563a8!important;
@@ -24,6 +29,25 @@
       }
     `;
     document.head.append(style);
+  }
+
+  function rememberStyle(el,property){
+    let backup=pickVisualBackup.get(el);
+    if(!backup){backup={};pickVisualBackup.set(el,backup)}
+    if(!(property in backup))backup[property]={value:el.style.getPropertyValue(property),priority:el.style.getPropertyPriority(property)};
+  }
+  function forceStyle(el,property,value){rememberStyle(el,property);el.style.setProperty(property,value,'important')}
+  function restoreStyle(el,property){const backup=pickVisualBackup.get(el)?.[property];if(!backup){el.style.removeProperty(property);return}if(backup.value)el.style.setProperty(property,backup.value,backup.priority||'');else el.style.removeProperty(property)}
+  function applyPickVisual(node,on){
+    node.classList.toggle('cohabit-pick-selected',on);
+    const parts=node.querySelectorAll('.shape,.outer');
+    if(on){
+      parts.forEach(part=>{forceStyle(part,'stroke','#2563a8');forceStyle(part,'stroke-width','5')});
+      forceStyle(node,'filter','drop-shadow(0 0 5px rgba(37,99,168,.24))');
+    }else{
+      parts.forEach(part=>{restoreStyle(part,'stroke');restoreStyle(part,'stroke-width')});
+      restoreStyle(node,'filter');
+    }
   }
 
   // app.js currently restores only people/relations on refresh. Recover the
@@ -82,17 +106,12 @@
 
   function roundedPath(points,radius=18){if(points.length<3)return'';const clamp=(a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(1,Math.hypot(dx,dy)),d=Math.min(radius,len/3);return{x:a.x+dx/len*d,y:a.y+dy/len*d}};let d='';points.forEach((p,i)=>{const prev=points[(i-1+points.length)%points.length],next=points[(i+1)%points.length],start=clamp(p,prev),end=clamp(p,next);d+=(i?' L':'M')+`${start.x} ${start.y} Q${p.x} ${p.y} ${end.x} ${end.y}`});return d+' Z'}
 
-  // One selected member: draw a compact rounded enclosure around that person only.
   function singleMemberBoundary(member){
     const x1=Math.max(8,member.x-74),x2=Math.min(1192,member.x+74),y1=Math.max(8,member.y-76),y2=Math.min(712,member.y+96);
     const points=[{x:x1,y:y1},{x:x2,y:y1},{x:x2,y:y2},{x:x1,y:y2}];
     return{path:roundedPath(points,24),x:x1,y:y1};
   }
 
-  // Two selected members: connect the MEMBERS directly with a smooth capsule.
-  // Relationship lines, parent junctions and other relation geometry are deliberately
-  // ignored. This prevents the cohabiting boundary from tracing family relation lines
-  // or creating self-intersecting detours when only two people are selected.
   function twoMemberBoundary(a,b){
     const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
     if(len<4)return singleMemberBoundary(a);
@@ -127,7 +146,15 @@
   }
 
   const previous=renderRelations;renderRelations=function(...args){const result=previous.apply(this,args);els.relations.querySelectorAll('.cohabit-boundary,.cohabit-boundary-v2,.cohabit-boundary-v3,.cohabit-boundary-members').forEach(node=>node.remove());const markup=boundaryMarkup();if(markup)els.relations.insertAdjacentHTML('afterbegin',markup);sync();return result};
-  function sync(){const ids=validIds();state.cohabitMemberIds=(state.cohabitMemberIds||[]).filter(id=>ids.has(id));els.nodes.querySelectorAll('.node[data-id]').forEach(node=>node.classList.toggle('cohabit-pick-selected',active&&chosen.has(node.dataset.id)));count.textContent=`${chosen.size}명 선택`;create.disabled=!chosen.size&&!(state.cohabitMemberIds||[]).length;create.textContent=chosen.size?'생성':'지정 해제';button.classList.toggle('active-tool',active)}
+  function sync(){
+    const ids=validIds();
+    state.cohabitMemberIds=(state.cohabitMemberIds||[]).filter(id=>ids.has(id));
+    els.nodes.querySelectorAll('.node[data-id]').forEach(node=>applyPickVisual(node,active&&chosen.has(node.dataset.id)));
+    count.textContent=`${chosen.size}명 선택`;
+    create.disabled=!chosen.size&&!(state.cohabitMemberIds||[]).length;
+    create.textContent=chosen.size?'생성':'지정 해제';
+    button.classList.toggle('active-tool',active);
+  }
   function stop(){active=false;window.__COHABIT_PICK_MODE__=false;chosen.clear();bar.hidden=true;sync()}
   button.addEventListener('click',()=>{if(!state.people.length){toast('먼저 가계도 구성원을 만들어주세요');return}active=true;window.__COHABIT_PICK_MODE__=true;chosen.clear();(state.cohabitMemberIds||[]).forEach(id=>{if(validIds().has(id))chosen.add(id)});bar.hidden=false;sync();toast('동거가족으로 표시할 구성원을 선택하세요')});
   cancel.addEventListener('click',stop);
