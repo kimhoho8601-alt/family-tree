@@ -36,4 +36,13 @@
     s.dataset.memberAddRelation = 'v1';
     document.body.append(s);
   }
+
+  // Keep quick entry focused on the minimum structure only.
+  // Sections 3 and 4 can be handled after generation in the detailed editor.
+  if (!document.querySelector('script[data-quick-entry-simplify]')) {
+    const s = document.createElement('script');
+    s.src = 'quick-entry-simplify-v1.js?v=20260911-1';
+    s.dataset.quickEntrySimplify = 'v1';
+    document.body.append(s);
+  }
 })();
