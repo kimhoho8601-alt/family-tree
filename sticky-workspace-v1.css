@@ -1,4 +1,4 @@
-:root{--app-header-h:72px}
+:root{--app-header-h:72px;--canvas-toolbar-h:78px}
 
 /* Keep the global file actions available while the page scrolls. */
 .topbar{
@@ -44,6 +44,44 @@
   box-shadow:0 4px 14px rgba(55,28,34,.045);
 }
 
+/* Keep cohabiting-family selection controls visible below the canvas toolbar. */
+#cohabitSelectionBar{
+  position:sticky;
+  top:calc(var(--app-header-h) + var(--canvas-toolbar-h));
+  z-index:495;
+  width:calc(100% - 32px);
+  max-width:none;
+  min-height:72px;
+  margin:10px 16px 12px;
+  padding:12px 16px;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto 96px 112px;
+  align-items:center;
+  gap:10px;
+  background:rgba(255,255,255,.985);
+  border:1px solid #eadde0;
+  border-radius:14px;
+  box-shadow:0 8px 22px rgba(55,28,34,.08);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+#cohabitSelectionBar[hidden]{display:none!important}
+#cohabitSelectionBar>div{min-width:0}
+#cohabitSelectionGuide{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cohabitSelectionBar small{display:block;margin-top:3px;white-space:normal;line-height:1.35}
+#cohabitSelectionCount{min-width:82px;text-align:center;white-space:nowrap;font-weight:700}
+#cohabitSelectionCancel,#cohabitSelectionCreate{
+  width:100%;
+  min-width:0;
+  height:42px;
+  padding:0 14px;
+  white-space:nowrap;
+  border-radius:10px;
+  font-weight:700;
+}
+#cohabitSelectionCreate{min-width:112px}
+
 /* When connection mode is active, keep its instructions under the tool bar. */
 .connection-bar{
   position:sticky;
@@ -58,6 +96,18 @@
   background:#f5f0f1;
 }
 
+@media(max-width:1200px) and (min-width:901px){
+  #cohabitSelectionBar{
+    grid-template-columns:minmax(0,1fr) auto 88px 104px;
+    width:calc(100% - 20px);
+    margin-left:10px;
+    margin-right:10px;
+    padding-left:14px;
+    padding-right:14px;
+  }
+  #cohabitSelectionGuide{white-space:normal;overflow:visible;text-overflow:clip}
+}
+
 @media(max-width:900px){
   .sidebar{
     position:relative;
@@ -69,9 +119,20 @@
   }
   .sidebar>.side-panel.active{overflow:visible;padding-right:0}
   .canvas-toolbar{top:var(--app-header-h)}
+  #cohabitSelectionBar{
+    position:relative;
+    top:auto;
+    width:calc(100% - 24px);
+    margin:10px 12px 12px;
+    grid-template-columns:minmax(0,1fr) auto auto;
+  }
+  #cohabitSelectionCount{grid-column:1/-1;text-align:left}
 }
 
 @media(max-width:560px){
   :root{--app-header-h:64px}
   .connection-bar{top:calc(var(--app-header-h) + 112px)}
+  #cohabitSelectionBar{grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+  #cohabitSelectionBar>div,#cohabitSelectionCount{grid-column:1/-1}
+  #cohabitSelectionCancel,#cohabitSelectionCreate{width:100%}
 }
