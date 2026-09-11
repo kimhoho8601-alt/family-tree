@@ -21,22 +21,24 @@
     return previousSave();
   };
 
-  // Normalize older browser/project data immediately as well.
   if (normalizeDeceasedCohabit()) {
     previousSave();
     render();
     if (typeof toast === 'function') toast('사망 구성원은 현재 동거가족에서 제외했습니다');
   }
 
-  // member-add-relation-v1.js is already loaded statically by index.html.
-  // Do not inject it again here: duplicate loading attaches duplicate handlers.
-
-  // Keep quick entry focused on the minimum structure only.
-  // This extension runs after advanced-quick.js has built the form.
   if (!document.querySelector('script[data-quick-entry-simplify]')) {
     const s = document.createElement('script');
     s.src = 'quick-entry-simplify-v1.js?v=20260911-2';
     s.dataset.quickEntrySimplify = 'v1';
+    document.body.append(s);
+  }
+
+  // New drawing flow: replace the old reset action with a clean blank-canvas reset.
+  if (!document.querySelector('script[data-new-drawing-reset]')) {
+    const s = document.createElement('script');
+    s.src = 'new-drawing-reset-v1.js?v=20260911-1';
+    s.dataset.newDrawingReset = 'v1';
     document.body.append(s);
   }
 })();
