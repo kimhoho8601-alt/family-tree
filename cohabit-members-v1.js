@@ -5,6 +5,27 @@
   const chosen=new Set();let active=false;
   const validIds=()=>new Set(state.people.map(person=>person.id));
 
+  // During cohabiting-family selection, blue must always win over the normal
+  // proband/client red outline. Once selection mode ends the class is removed,
+  // so the original red target outline returns automatically.
+  if(!document.querySelector('style[data-cohabit-pick-visual]')){
+    const style=document.createElement('style');
+    style.dataset.cohabitPickVisual='v1';
+    style.textContent=`
+      .node.cohabit-pick-selected .shape,
+      .node.cohabit-pick-selected .outer,
+      .node.proband.cohabit-pick-selected .shape,
+      .node.proband.cohabit-pick-selected .outer{
+        stroke:#2563a8!important;
+        stroke-width:5!important;
+      }
+      .node.cohabit-pick-selected{
+        filter:drop-shadow(0 0 5px rgba(37,99,168,.24))!important;
+      }
+    `;
+    document.head.append(style);
+  }
+
   // app.js currently restores only people/relations on refresh. Recover the
   // cohabiting-family fields from the same saved localStorage payload before
   // the legacy migration below can overwrite the user's manual selection.
