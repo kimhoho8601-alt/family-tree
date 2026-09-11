@@ -34,12 +34,12 @@
     document.body.append(s);
   }
 
-  // Add a compact third-generation section to quick entry after the simplified
-  // child/parent flow has been prepared.
-  if (!document.querySelector('script[data-quick-grandparents]')) {
+  // Simple third-generation selector: choose paternal, maternal, or both sides;
+  // grandparents are injected automatically into the quick-create save cycle.
+  if (!document.querySelector('script[data-quick-grandparents-auto]')) {
     const s = document.createElement('script');
-    s.src = 'quick-grandparents-v1.js?v=20260911-1';
-    s.dataset.quickGrandparents = 'v1';
+    s.src = 'quick-grandparents-auto-v2.js?v=20260911-1';
+    s.dataset.quickGrandparentsAuto = 'v2';
     document.body.append(s);
   }
 
