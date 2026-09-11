@@ -35,14 +35,35 @@ body[data-studio-mode="combined"] .top-actions{
   z-index:420;
 }
 
+/*
+ * Quick / detail mode tabs must stay visible at all times.
+ * On desktop/tablet the sidebar itself scrolls, so top:0 pins them inside it.
+ * Mobile overrides the top offset below so they stay directly under the global header.
+ */
 .sidebar>.mode-tabs{
-  position:sticky;
-  top:0;
-  z-index:430;
+  position:sticky!important;
+  top:0!important;
+  z-index:900!important;
   flex:0 0 auto;
   width:100%;
-  margin-bottom:10px;
-  background:#f5f0f1;
+  margin:0 0 10px;
+  padding-top:8px;
+  padding-bottom:8px;
+  background:rgba(255,255,255,.985)!important;
+  box-shadow:0 7px 14px rgba(55,28,34,.06);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  isolation:isolate;
+}
+.sidebar>.mode-tabs::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:1px;
+  background:#eee3e6;
+  pointer-events:none;
 }
 .sidebar>.side-panel.active{
   display:block;
@@ -117,6 +138,11 @@ body[data-studio-mode="combined"] .top-actions{
 }
 
 @media(max-width:1200px) and (min-width:901px){
+  .sidebar>.mode-tabs{
+    position:sticky!important;
+    top:0!important;
+    z-index:900!important;
+  }
   #cohabitSelectionBar{
     grid-template-columns:minmax(0,1fr) auto 88px 104px;
     width:calc(100% - 20px);
@@ -137,6 +163,14 @@ body[data-studio-mode="combined"] .top-actions{
     overflow:visible;
     scrollbar-gutter:auto;
   }
+  /* The page scrolls on mobile, so pin the tabs below the sticky app header. */
+  .sidebar>.mode-tabs{
+    position:sticky!important;
+    top:var(--app-header-h)!important;
+    z-index:980!important;
+    margin-left:0;
+    margin-right:0;
+  }
   .sidebar>.side-panel.active{overflow:visible;padding-right:0}
   .canvas-toolbar{top:var(--app-header-h)}
   #cohabitSelectionBar{
@@ -147,6 +181,20 @@ body[data-studio-mode="combined"] .top-actions{
     grid-template-columns:minmax(0,1fr) auto auto;
   }
   #cohabitSelectionCount{grid-column:1/-1;text-align:left}
+}
+
+/* Touch tablets can have a desktop-width viewport. Keep the sidebar tabs sticky
+ * there as well, even when the mobile-canvas script marks the device explicitly. */
+html.touch-canvas-device .sidebar>.mode-tabs{
+  position:sticky!important;
+  top:0!important;
+  z-index:900!important;
+}
+@media(max-width:900px){
+  html.touch-canvas-device .sidebar>.mode-tabs{
+    top:var(--app-header-h)!important;
+    z-index:980!important;
+  }
 }
 
 @media(max-width:560px){
