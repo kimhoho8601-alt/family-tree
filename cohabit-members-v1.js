@@ -60,12 +60,49 @@
   }
 
   function roundedPath(points,radius=18){if(points.length<3)return'';const clamp=(a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(1,Math.hypot(dx,dy)),d=Math.min(radius,len/3);return{x:a.x+dx/len*d,y:a.y+dy/len*d}};let d='';points.forEach((p,i)=>{const prev=points[(i-1+points.length)%points.length],next=points[(i+1)%points.length],start=clamp(p,prev),end=clamp(p,next);d+=(i?' L':'M')+`${start.x} ${start.y} Q${p.x} ${p.y} ${end.x} ${end.y}`});return d+' Z'}
+
+  // One selected member: draw a compact rounded enclosure around that person only.
+  function singleMemberBoundary(member){
+    const x1=Math.max(8,member.x-74),x2=Math.min(1192,member.x+74),y1=Math.max(8,member.y-76),y2=Math.min(712,member.y+96);
+    const points=[{x:x1,y:y1},{x:x2,y:y1},{x:x2,y:y2},{x:x1,y:y2}];
+    return{path:roundedPath(points,24),x:x1,y:y1};
+  }
+
+  // Two selected members: connect the MEMBERS directly with a smooth capsule.
+  // Relationship lines, parent junctions and other relation geometry are deliberately
+  // ignored. This prevents the cohabiting boundary from tracing family relation lines
+  // or creating self-intersecting detours when only two people are selected.
+  function twoMemberBoundary(a,b){
+    const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+    if(len<4)return singleMemberBoundary(a);
+    const ux=dx/len,uy=dy/len,nx=-uy,ny=ux,r=82,k=r*1.34;
+    const topA={x:a.x+nx*r,y:a.y+ny*r},topB={x:b.x+nx*r,y:b.y+ny*r};
+    const bottomB={x:b.x-nx*r,y:b.y-ny*r},bottomA={x:a.x-nx*r,y:a.y-ny*r};
+    const c1={x:topB.x+ux*k,y:topB.y+uy*k},c2={x:bottomB.x+ux*k,y:bottomB.y+uy*k};
+    const c3={x:bottomA.x-ux*k,y:bottomA.y-uy*k},c4={x:topA.x-ux*k,y:topA.y-uy*k};
+    const path=`M${topA.x} ${topA.y} L${topB.x} ${topB.y} C${c1.x} ${c1.y} ${c2.x} ${c2.y} ${bottomB.x} ${bottomB.y} L${bottomA.x} ${bottomA.y} C${c3.x} ${c3.y} ${c4.x} ${c4.y} ${topA.x} ${topA.y} Z`;
+    const x=Math.max(8,Math.min(a.x,b.x)-r),y=Math.max(8,Math.min(a.y,b.y)-r);
+    return{path,x,y};
+  }
+
   function boundaryMarkup(){
     const ids=(state.cohabitMemberIds||[]).filter(id=>validIds().has(id));state.cohabitMemberIds=ids;if(!ids.length)return'';
-    const members=ids.map(id=>state.people.find(person=>person.id===id)).filter(Boolean),memberSet=new Set(ids),outsiders=state.people.filter(person=>!memberSet.has(person.id)),padX=68,padTop=72,padBottom=94,points=[];
-    members.forEach(person=>{points.push({x:Math.max(8,person.x-padX),y:Math.max(8,person.y-padTop)},{x:Math.min(1192,person.x+padX),y:Math.max(8,person.y-padTop)},{x:Math.min(1192,person.x+padX),y:Math.min(712,person.y+padBottom)},{x:Math.max(8,person.x-padX),y:Math.min(712,person.y+padBottom)})});
-    const hull=convexHull(points),boundary=buildConcaveBoundary(hull,members,outsiders),path=roundedPath(boundary,20),x=Math.min(...hull.map(p=>p.x)),y=Math.min(...hull.map(p=>p.y));
-    return`<g class="cohabit-boundary-members"><path d="${path}" fill="none" stroke="#33272a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${x+12}" y="${y>24?y-8:y+18}" fill="#33272a" font-size="12" font-weight="700">동거가족</text></g>`;
+    const members=ids.map(id=>state.people.find(person=>person.id===id)).filter(Boolean),memberSet=new Set(ids),outsiders=state.people.filter(person=>!memberSet.has(person.id));
+
+    let shape;
+    if(members.length===1){
+      shape=singleMemberBoundary(members[0]);
+    }else if(members.length===2){
+      shape=twoMemberBoundary(members[0],members[1]);
+    }else{
+      const padX=68,padTop=72,padBottom=94,points=[];
+      members.forEach(person=>{points.push({x:Math.max(8,person.x-padX),y:Math.max(8,person.y-padTop)},{x:Math.min(1192,person.x+padX),y:Math.max(8,person.y-padTop)},{x:Math.min(1192,person.x+padX),y:Math.min(712,person.y+padBottom)},{x:Math.max(8,person.x-padX),y:Math.min(712,person.y+padBottom)})});
+      const hull=convexHull(points),boundary=buildConcaveBoundary(hull,members,outsiders);
+      shape={path:roundedPath(boundary,20),x:Math.min(...hull.map(p=>p.x)),y:Math.min(...hull.map(p=>p.y))};
+    }
+
+    const labelY=shape.y>24?shape.y-8:shape.y+18;
+    return`<g class="cohabit-boundary-members" pointer-events="none"><path d="${shape.path}" fill="none" stroke="#33272a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${shape.x+12}" y="${labelY}" fill="#33272a" font-size="12" font-weight="700">동거가족</text></g>`;
   }
 
   const previous=renderRelations;renderRelations=function(...args){const result=previous.apply(this,args);els.relations.querySelectorAll('.cohabit-boundary,.cohabit-boundary-v2,.cohabit-boundary-v3,.cohabit-boundary-members').forEach(node=>node.remove());const markup=boundaryMarkup();if(markup)els.relations.insertAdjacentHTML('afterbegin',markup);sync();return result};
