@@ -49,4 +49,13 @@
     s.dataset.exportCleanup = 'v1';
     document.body.append(s);
   }
+
+  // When an ecology resource is linked to a specific family member, place it
+  // near that member instead of leaving every new resource at the default top position.
+  if (!document.querySelector('script[data-resource-near-target]')) {
+    const s = document.createElement('script');
+    s.src = 'resource-near-target-v1.js?v=20260911-1';
+    s.dataset.resourceNearTarget = 'v1';
+    document.body.append(s);
+  }
 })();
