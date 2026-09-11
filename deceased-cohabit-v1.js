@@ -75,6 +75,15 @@
     document.body.append(s);
   }
 
+  // Display member/resource memos on the diagrams and preserve line breaks as
+  // simple dash-list items in both genogram and ecology editors.
+  if (!document.querySelector('script[data-memo-lines]')) {
+    const s = document.createElement('script');
+    s.src = 'memo-lines-v1.js?v=20260911-1';
+    s.dataset.memoLines = 'v1';
+    document.body.append(s);
+  }
+
   // When an ecology resource is linked to a specific family member, place it
   // near that member instead of leaving every new resource at the default top position.
   if (!document.querySelector('script[data-resource-near-target]')) {
