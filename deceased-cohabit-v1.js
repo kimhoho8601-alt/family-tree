@@ -28,20 +28,14 @@
     if (typeof toast === 'function') toast('사망 구성원은 현재 동거가족에서 제외했습니다');
   }
 
-  // Final editor extension: optional relationship selection while adding a member.
-  // Load it late so every add-person entry path uses the same existing person dialog.
-  if (!document.querySelector('script[data-member-add-relation]')) {
-    const s = document.createElement('script');
-    s.src = 'member-add-relation-v1.js?v=20260828-1718';
-    s.dataset.memberAddRelation = 'v1';
-    document.body.append(s);
-  }
+  // member-add-relation-v1.js is already loaded statically by index.html.
+  // Do not inject it again here: duplicate loading attaches duplicate handlers.
 
   // Keep quick entry focused on the minimum structure only.
-  // Sections 3 and 4 can be handled after generation in the detailed editor.
+  // This extension runs after advanced-quick.js has built the form.
   if (!document.querySelector('script[data-quick-entry-simplify]')) {
     const s = document.createElement('script');
-    s.src = 'quick-entry-simplify-v1.js?v=20260911-1';
+    s.src = 'quick-entry-simplify-v1.js?v=20260911-2';
     s.dataset.quickEntrySimplify = 'v1';
     document.body.append(s);
   }
