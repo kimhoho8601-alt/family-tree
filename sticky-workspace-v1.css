@@ -8,6 +8,14 @@
   box-shadow:0 4px 16px rgba(55,28,34,.05);
 }
 
+/* Keep the same global actions visible in every studio mode. */
+body[data-studio-mode="eco"] .top-actions,
+body[data-studio-mode="combined"] .top-actions{
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+
 .workspace{
   overflow:clip;
   align-items:start;
