@@ -42,6 +42,14 @@
     document.body.append(s);
   }
 
+  // Empty state CTA opens the blank grid directly instead of forcing quick entry.
+  if (!document.querySelector('script[data-empty-grid-start]')) {
+    const s = document.createElement('script');
+    s.src = 'empty-grid-start-v1.js?v=20260911-1';
+    s.dataset.emptyGridStart = 'v1';
+    document.body.append(s);
+  }
+
   // Remove editor-only guidance text from ecology PNG exports while keeping it on screen.
   if (!document.querySelector('script[data-export-cleanup]')) {
     const s = document.createElement('script');
