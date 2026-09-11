@@ -4,6 +4,20 @@
   if(!button||!bar)return;
   const chosen=new Set();let active=false;
   const validIds=()=>new Set(state.people.map(person=>person.id));
+
+  // app.js currently restores only people/relations on refresh. Recover the
+  // cohabiting-family fields from the same saved localStorage payload before
+  // the legacy migration below can overwrite the user's manual selection.
+  try{
+    const persisted=JSON.parse(localStorage.getItem('genogram-studio')||'null');
+    if(persisted&&typeof persisted==='object'&&Array.isArray(persisted.cohabitMemberIds)){
+      const ids=validIds();
+      state.cohabitMemberIds=persisted.cohabitMemberIds.filter(id=>ids.has(id));
+      state.cohabitSelectionVersion=Number(persisted.cohabitSelectionVersion)||2;
+      if(persisted.cohabitBox&&typeof persisted.cohabitBox==='object')state.cohabitBox={...persisted.cohabitBox};
+    }
+  }catch{}
+
   if(state.cohabitSelectionVersion!==2){const legacy=state.people.filter(person=>person.life!=='dead'&&['yes','true','1','동거'].includes(String(person.cohabit).toLowerCase())).map(person=>person.id);state.cohabitMemberIds=legacy;state.cohabitSelectionVersion=2;state.cohabitBox=null;save();}
 
   const convexHull=points=>{if(points.length<3)return points;const sorted=points.slice().sort((a,b)=>a.x-b.x||a.y-b.y),cross=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x),lower=[],upper=[];for(const p of sorted){while(lower.length>=2&&cross(lower.at(-2),lower.at(-1),p)<=0)lower.pop();lower.push(p)}for(const p of sorted.slice().reverse()){while(upper.length>=2&&cross(upper.at(-2),upper.at(-1),p)<=0)upper.pop();upper.push(p)}return lower.slice(0,-1).concat(upper.slice(0,-1))};
