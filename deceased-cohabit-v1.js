@@ -34,6 +34,15 @@
     document.body.append(s);
   }
 
+  // Add a compact third-generation section to quick entry after the simplified
+  // child/parent flow has been prepared.
+  if (!document.querySelector('script[data-quick-grandparents]')) {
+    const s = document.createElement('script');
+    s.src = 'quick-grandparents-v1.js?v=20260911-1';
+    s.dataset.quickGrandparents = 'v1';
+    document.body.append(s);
+  }
+
   // New drawing flow: replace the old reset action with a clean blank-canvas reset.
   if (!document.querySelector('script[data-new-drawing-reset]')) {
     const s = document.createElement('script');
