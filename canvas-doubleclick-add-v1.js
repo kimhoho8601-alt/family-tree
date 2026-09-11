@@ -7,9 +7,10 @@
   const editPanel = document.querySelector('#editPanel');
   if (!svg || !personForm || !personDialog || !editPanel) return;
 
-  document.documentElement.dataset.canvasDoubleClickAdd = 'v2';
+  document.documentElement.dataset.canvasDoubleClickAdd = 'v3';
 
   let pendingDoubleAdd = null;
+  let lastNodePress = null;
 
   function isBlankCanvasTarget(target) {
     if (!(target instanceof Element) || !svg.contains(target)) return false;
@@ -36,23 +37,46 @@
     const person = state.people.find(p => p.id === node?.dataset?.id);
     if (!person || !canOpenPersonDialog()) return false;
 
-    event.preventDefault();
-    event.stopImmediatePropagation();
-
-    // A double-click can finish a tiny drag first. Clear transient drag state so
-    // opening the editor never moves the member underneath the dialog.
+    event?.preventDefault?.();
+    event?.stopImmediatePropagation?.();
     if (typeof drag !== 'undefined') drag = null;
 
     pendingDoubleAdd = null;
+    lastNodePress = null;
     window.__PERSON_ADD_MODE__ = 'member-doubleclick-edit';
+    document.dispatchEvent(new CustomEvent('member-edit-open', {detail:{id:person.id}}));
     if (!editPanel.classList.contains('active') && typeof activatePanel === 'function') activatePanel('editPanel');
     openPerson(person);
     return true;
   }
 
-  // Existing member: double-click opens the same member-information dialog used
-  // elsewhere in the editor. Handle this in capture phase so group selection,
-  // drag helpers, or other editor extensions cannot swallow the gesture.
+  // Node dragging calls preventDefault() on pointerdown, which suppresses the
+  // browser's native dblclick event in some browsers. Detect a rapid second
+  // pointer press ourselves, before the drag handler runs, and treat it as the
+  // member-edit gesture.
+  svg.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'touch' && event.button !== 0) return;
+    const node = event.target.closest?.('.node[data-id]');
+    if (!node || !canOpenPersonDialog()) {
+      lastNodePress = null;
+      return;
+    }
+
+    const now = performance.now();
+    const current = {id:node.dataset.id,time:now,x:event.clientX,y:event.clientY};
+    const isSecond = lastNodePress &&
+      lastNodePress.id === current.id &&
+      now - lastNodePress.time <= 430 &&
+      Math.hypot(current.x-lastNodePress.x,current.y-lastNodePress.y) <= 14;
+
+    if (isSecond) {
+      openExistingMember(node, event);
+      return;
+    }
+    lastNodePress = current;
+  }, true);
+
+  // Keep native dblclick support too, for browsers that still dispatch it.
   svg.addEventListener('dblclick', event => {
     if (event.button !== 0) return;
     const node = event.target.closest?.('.node[data-id]');
@@ -73,6 +97,7 @@
     if (e.button !== 0 || !canOpenPersonDialog() || !isBlankCanvasTarget(e.target)) return;
     e.preventDefault();
     e.stopImmediatePropagation();
+    lastNodePress = null;
     pendingDoubleAdd = {
       point: svgPointFromClient(e.clientX, e.clientY),
       beforeIds: new Set(state.people.map(p => p.id))
@@ -99,6 +124,7 @@
 
   personDialog.addEventListener('close', () => {
     pendingDoubleAdd = null;
+    lastNodePress = null;
     if (window.__PERSON_ADD_MODE__ === 'canvas-doubleclick' || window.__PERSON_ADD_MODE__ === 'member-doubleclick-edit') {
       delete window.__PERSON_ADD_MODE__;
     }
