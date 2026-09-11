@@ -5,11 +5,11 @@
 
   const q = (s, root=document) => root.querySelector(s);
   const qa = (s, root=document) => [...root.querySelectorAll(s)];
-  const uid = () => crypto.randomUUID?.() || `gp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
+  const uid = () => (globalThis.crypto?.randomUUID?.()) || `gp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
   const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   const style = document.createElement('style');
-  style.dataset.quickGrandparents = 'v1';
+  style.dataset.quickGrandparents = 'v2';
   style.textContent = `
     #aqGrandparentsSection .aq-grand-columns{display:grid;grid-template-columns:1fr 1fr;gap:9px}
     #aqGrandparentsSection .aq-grand-side{min-width:0;padding:10px;border:1px solid var(--line);border-radius:11px;background:#faf8f8}
@@ -97,75 +97,101 @@
   });
   syncParentTargets();
 
-  function grandSpec(row) {
-    const key = row.dataset.grand;
-    const specs = {
-      'paternal-grandfather': {role:'조부', gender:'male', dx:-92},
-      'paternal-grandmother': {role:'조모', gender:'female', dx:92},
-      'maternal-grandfather': {role:'조부', gender:'male', dx:-92},
-      'maternal-grandmother': {role:'조모', gender:'female', dx:92}
-    };
-    return specs[key];
-  }
-
-  function appendGrandparents() {
-    const createdBySide = [];
+  function readGrandparentDraft() {
+    const draft = [];
     ['father','mother'].forEach(kind => {
       const side = q(`[data-grand-side="${kind}"]`, section);
       const targetUid = q('.aq-grand-parent-target', side)?.value;
       if (!targetUid) return;
-      const cards = parentCards(kind);
-      const targetIndex = cards.findIndex(card => card.dataset.uid === targetUid);
-      if (targetIndex < 0) return;
-      const generatedParents = state.people.filter(p => p.role === (kind === 'father' ? '부' : '모'));
-      const parent = generatedParents[targetIndex];
-      if (!parent) return;
-
-      const made = [];
       qa('.aq-grand-row', side).forEach(row => {
         if (!q('.aq-grand-on', row)?.checked) return;
-        const spec = grandSpec(row);
-        if (!spec) return;
-        const person = {
-          id: uid(),
-          name: q('.aq-grand-name', row)?.value.trim() || spec.role,
-          role: spec.role,
-          gender: spec.gender,
-          age: q('.aq-grand-age', row)?.value.trim() || '',
-          life: 'alive',
-          cohabit: 'unknown',
-          note: '',
-          x: Math.max(70, Math.min(1130, parent.x + spec.dx)),
-          y: Math.max(80, parent.y - 165),
-          quickGrandparent: true
+        const key = row.dataset.grand;
+        const specs = {
+          'paternal-grandfather': {role:'조부', gender:'male', dx:-92},
+          'paternal-grandmother': {role:'조모', gender:'female', dx:92},
+          'maternal-grandfather': {role:'조부', gender:'male', dx:-92},
+          'maternal-grandmother': {role:'조모', gender:'female', dx:92}
         };
-        state.people.push(person);
-        state.relations.push({id:uid(),from:person.id,to:parent.id,type:'parent'});
-        made.push(person);
+        const spec = specs[key];
+        if (!spec) return;
+        draft.push({
+          kind,
+          targetUid,
+          key,
+          role:spec.role,
+          gender:spec.gender,
+          dx:spec.dx,
+          name:q('.aq-grand-name', row)?.value.trim() || spec.role,
+          age:q('.aq-grand-age', row)?.value.trim() || ''
+        });
       });
+    });
+    return draft;
+  }
 
-      if (made.length === 2) {
-        state.relations.push({id:uid(),from:made[0].id,to:made[1].id,type:'marriage'});
-      }
-      if (made.length) createdBySide.push(...made);
+  function appendGrandparents(draft) {
+    if (!draft?.length) return;
+    const madeByTarget = new Map();
+    let created = 0;
+
+    ['father','mother'].forEach(kind => {
+      const cards = parentCards(kind);
+      const generatedParents = state.people.filter(p => p.role === (kind === 'father' ? '부' : '모'));
+      cards.forEach((card,index) => {
+        const parent = generatedParents[index];
+        if (!parent) return;
+        const rows = draft.filter(item => item.kind === kind && item.targetUid === card.dataset.uid);
+        if (!rows.length) return;
+        const made = [];
+        rows.forEach(item => {
+          const person = {
+            id: uid(),
+            name: item.name,
+            role: item.role,
+            gender: item.gender,
+            age: item.age,
+            life: 'alive',
+            cohabit: 'unknown',
+            note: '',
+            x: Math.max(70, Math.min(1130, parent.x + item.dx)),
+            y: Math.max(80, parent.y - 165),
+            quickGrandparent: true
+          };
+          state.people.push(person);
+          state.relations.push({id:uid(),from:person.id,to:parent.id,type:'parent'});
+          made.push(person);
+          created++;
+        });
+        madeByTarget.set(parent.id, made);
+      });
     });
 
-    if (createdBySide.length) {
+    madeByTarget.forEach(made => {
+      if (made.length === 2) state.relations.push({id:uid(),from:made[0].id,to:made[1].id,type:'marriage'});
+    });
+
+    if (created) {
       state.cohabitBox = null;
       save();
       render();
-      if (typeof toast === 'function') toast(`조부모 ${createdBySide.length}명을 포함해 3대 가계도를 만들었습니다`);
+      if (typeof toast === 'function') toast(`조부모 ${created}명을 포함해 3대 가계도를 만들었습니다`);
     }
   }
 
-  // advanced-quick owns the submit handler and stops propagation. Capture first,
-  // then append grandparents only if that handler actually replaced/generated state.
-  form.addEventListener('submit', () => {
+  // advanced-quick registers a capture listener directly on #quickForm and calls
+  // stopImmediatePropagation(), so a second submit listener on the form never runs.
+  // Listen from document capture instead: this fires before the event reaches the
+  // form, snapshots the checked grandparent inputs, and appends them after the
+  // advanced-quick submit handler has finished generating the child/parent state.
+  document.addEventListener('submit', event => {
+    if (event.target !== form) return;
+    const draft = readGrandparentDraft();
+    if (!draft.length) return;
     const beforeIds = state.people.map(p => p.id).join('|');
     setTimeout(() => {
       const afterIds = state.people.map(p => p.id).join('|');
       if (!afterIds || afterIds === beforeIds) return;
-      appendGrandparents();
+      appendGrandparents(draft);
     }, 0);
   }, true);
 })();
