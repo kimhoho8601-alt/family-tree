@@ -4,8 +4,13 @@
   const resetBtn = document.querySelector('#resetBtn');
   if (!resetBtn) return;
 
+  const ECO_STORAGE_KEYS = [
+    'case-relationship-studio-combined-v1',
+    'case-relationship-studio-ecomap-v1'
+  ];
+
   resetBtn.textContent = '새로 그리기';
-  resetBtn.setAttribute('aria-label', '현재 가계도를 비우고 새로 그리기');
+  resetBtn.setAttribute('aria-label', '가계도와 생태도를 모두 비우고 새로 그리기');
 
   function resetQuickForm() {
     const form = document.querySelector('#quickForm');
@@ -48,29 +53,64 @@
     if (typeof drag !== 'undefined') drag = null;
   }
 
+  function hasEcologyContent() {
+    return ECO_STORAGE_KEYS.some(key => {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || 'null');
+        if (!value || typeof value !== 'object') return false;
+        if (Array.isArray(value.resources) && value.resources.length) return true;
+        if (Array.isArray(value.systems) && value.systems.length) return true;
+        return false;
+      } catch {
+        return !!localStorage.getItem(key);
+      }
+    });
+  }
+
+  function clearEcologyState() {
+    ECO_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+  }
+
   resetBtn.onclick = event => {
     event.preventDefault();
 
-    const hasContent = state.people.length || state.relations.length || (state.cohabitMemberIds || []).length;
-    if (hasContent && !confirm('현재 가계도를 모두 비우고 새로 그릴까요?\n저장하지 않은 내용은 사라집니다.')) return;
+    const hasContent = state.people.length ||
+      state.relations.length ||
+      (state.cohabitMemberIds || []).length ||
+      hasEcologyContent();
+
+    if (hasContent && !confirm('가계도와 생태도 작업을 모두 비우고 새로 그릴까요?\n저장하지 않은 내용은 모두 사라집니다.')) return;
 
     clearTransientEditorState();
 
+    // Reset the genogram state first so the empty state is persisted.
     state.people = [];
     state.relations = [];
     state.zoom = 1;
     state.cohabitMemberIds = [];
     state.cohabitSelectionVersion = 2;
     state.cohabitBox = null;
-
     save();
+
+    // The combined/ecology editors keep their own in-memory state and localStorage.
+    // Clear those stores explicitly, then reload once so every editor reinitializes
+    // from a genuinely blank state instead of keeping stale resource objects alive.
+    clearEcologyState();
     resetQuickForm();
-    render();
 
-    if (typeof activatePanel === 'function') activatePanel('quickPanel');
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) sidebar.scrollTop = 0;
+    try {
+      sessionStorage.setItem('case-relationship-studio-reset-toast', '1');
+    } catch {}
 
-    if (typeof toast === 'function') toast('빈 가계도로 초기화했습니다');
+    window.location.reload();
   };
+
+  try {
+    if (sessionStorage.getItem('case-relationship-studio-reset-toast') === '1') {
+      sessionStorage.removeItem('case-relationship-studio-reset-toast');
+      requestAnimationFrame(() => {
+        if (typeof toast === 'function') toast('가계도와 생태도를 모두 초기화했습니다');
+      });
+    }
+  } catch {}
 })();
