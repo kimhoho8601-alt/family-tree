@@ -41,4 +41,12 @@
     s.dataset.newDrawingReset = 'v1';
     document.body.append(s);
   }
+
+  // Remove editor-only guidance text from ecology PNG exports while keeping it on screen.
+  if (!document.querySelector('script[data-export-cleanup]')) {
+    const s = document.createElement('script');
+    s.src = 'export-cleanup-v1.js?v=20260911-1';
+    s.dataset.exportCleanup = 'v1';
+    document.body.append(s);
+  }
 })();
