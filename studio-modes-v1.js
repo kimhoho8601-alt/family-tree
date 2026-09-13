@@ -29,3 +29,12 @@
 
   activate('genogram');
 })();
+
+(() => {
+  if (document.querySelector('script[data-site-admin-loader]')) return;
+  const script = document.createElement('script');
+  script.src = `site-admin-v1.js?v=20260914-1`;
+  script.dataset.siteAdminLoader = 'true';
+  script.defer = true;
+  document.head.appendChild(script);
+})();
