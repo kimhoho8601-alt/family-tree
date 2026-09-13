@@ -65,7 +65,76 @@
 
   const selectedPeople = new Set();
   const style = document.createElement('style');
-  style.textContent = '.node.person-delete-selected .shape,.node.person-delete-selected .outer{stroke:#c9002b!important;stroke-width:4!important}';
+  style.textContent = `
+    .node.person-delete-selected .shape,.node.person-delete-selected .outer{stroke:#c9002b!important;stroke-width:4!important}
+
+    /* Person editor gender selector: override generic form input sizing. */
+    #personDialog .gender-choice{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+      width:100%;
+    }
+    #personDialog .gender-choice label{
+      position:relative;
+      min-width:0;
+      cursor:pointer;
+    }
+    #personDialog .gender-choice input[type="radio"]{
+      position:absolute!important;
+      width:1px!important;
+      height:1px!important;
+      margin:0!important;
+      padding:0!important;
+      opacity:0;
+      pointer-events:none;
+    }
+    #personDialog .gender-choice span{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      min-height:44px;
+      margin:0;
+      padding:10px 8px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fff;
+      color:var(--ink);
+      font-size:13px;
+      font-weight:600;
+      line-height:1.2;
+      text-align:center;
+      white-space:nowrap;
+      transition:border-color .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;
+    }
+    #personDialog .gender-choice label:hover span{
+      border-color:#e5a1b0;
+      background:#fffafb;
+    }
+    #personDialog .gender-choice input[type="radio"]:checked + span{
+      border-color:var(--red);
+      background:var(--red-soft);
+      color:var(--red);
+      font-weight:800;
+      box-shadow:0 0 0 1px rgba(201,0,43,.04);
+    }
+    #personDialog .gender-choice input[type="radio"]:focus-visible + span{
+      outline:2px solid var(--red);
+      outline-offset:2px;
+    }
+    #personDialog .gender-choice label:active span{transform:translateY(1px)}
+
+    @media(max-width:560px){
+      #personDialog form{padding:22px 18px}
+      #personDialog .form-grid{gap:15px}
+      #personDialog .gender-choice{gap:6px}
+      #personDialog .gender-choice span{min-height:42px;padding:9px 4px;font-size:12px;border-radius:9px}
+    }
+    @media(min-width:561px) and (max-width:900px){
+      #personDialog .gender-choice span{min-height:46px}
+    }
+  `;
   document.head.append(style);
 
   function syncPersonSelection() {
