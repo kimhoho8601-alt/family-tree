@@ -10,12 +10,18 @@
     const style=document.createElement('style');
     style.id='aqClientFlagStyles';
     style.textContent=`
-      .aq-child-flags{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px}
-      .aq-child-flags .aq-check{margin-top:0;min-height:30px;box-sizing:border-box}
-      .aq-client-toggle{font-weight:700;color:#4f4245;background:#fff}
-      .aq-client-toggle:has(input:checked){border-color:var(--red);background:var(--red-soft);color:var(--red)}
-      @media(max-width:380px){.aq-child-flags{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}.aq-child-flags .aq-check{width:100%;justify-content:center;white-space:nowrap}}
-      @media(min-width:381px) and (max-width:900px){.aq-child-flags{gap:6px}.aq-child-flags .aq-check{min-height:32px}}
+      .aq-child-flags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+      .aq-child-flags .aq-check{margin-top:0;min-height:36px;box-sizing:border-box;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:9px;white-space:nowrap;touch-action:manipulation}
+      .aq-client-toggle{font-weight:800;color:var(--red);background:#fff1f4;border:1px solid #ee9caf;box-shadow:0 1px 0 rgba(201,0,43,.03);transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+      .aq-client-toggle:hover{border-color:var(--red);background:#ffe8ee}
+      .aq-client-toggle:active{transform:translateY(1px)}
+      .aq-client-toggle input{width:15px;height:15px;margin:0;accent-color:var(--red);flex:0 0 15px}
+      .aq-client-toggle span{font-weight:800;letter-spacing:-.02em}
+      .aq-client-toggle:has(input:checked){border-color:var(--red);background:var(--red);color:#fff;box-shadow:0 4px 10px rgba(201,0,43,.16)}
+      .aq-client-toggle:has(input:checked) input{accent-color:#fff}
+      .aq-client-toggle:has(input:checked)::after{content:'선택됨';margin-left:1px;padding:2px 5px;border-radius:999px;background:rgba(255,255,255,.18);font-size:8px;font-weight:800;line-height:1.2;color:#fff}
+      @media(max-width:380px){.aq-child-flags{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}.aq-child-flags .aq-check{width:100%;justify-content:center;min-height:38px;padding:8px 6px}.aq-client-toggle:has(input:checked)::after{display:none}}
+      @media(min-width:381px) and (max-width:900px){.aq-child-flags{gap:7px}.aq-child-flags .aq-check{min-height:38px;padding-top:8px;padding-bottom:8px}}
     `;
     document.head.append(style);
   }
@@ -43,7 +49,7 @@
       if(cohabit&&cohabit.parentElement!==flags)flags.append(cohabit);
       const label=document.createElement('label');
       label.className='aq-check aq-client-toggle';
-      label.innerHTML='<input class="aq-client" type="checkbox"> 클라이언트';
+      label.innerHTML='<input class="aq-client" type="checkbox"><span>클라이언트</span>';
       flags.append(label);
       client=q('.aq-client',card);
     }
