@@ -5,6 +5,67 @@
   const normLife=v=>['alive','dead','unknown'].includes(v)?v:'alive';
   const pairKey=(a,b)=>[a,b].sort().join('|');
 
+  function installClientFlagStyles(){
+    if(document.querySelector('#aqClientFlagStyles'))return;
+    const style=document.createElement('style');
+    style.id='aqClientFlagStyles';
+    style.textContent=`
+      .aq-child-flags{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px}
+      .aq-child-flags .aq-check{margin-top:0;min-height:30px;box-sizing:border-box}
+      .aq-client-toggle{font-weight:700;color:#4f4245;background:#fff}
+      .aq-client-toggle:has(input:checked){border-color:var(--red);background:var(--red-soft);color:var(--red)}
+      @media(max-width:380px){.aq-child-flags{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}.aq-child-flags .aq-check{width:100%;justify-content:center;white-space:nowrap}}
+      @media(min-width:381px) and (max-width:900px){.aq-child-flags{gap:6px}.aq-child-flags .aq-check{min-height:32px}}
+    `;
+    document.head.append(style);
+  }
+
+  function syncClientBadge(card,index){
+    const badge=q('.aq-badge',card);
+    if(!badge)return;
+    if(index===0){badge.textContent='주 대상아동';return;}
+    badge.textContent=q('.aq-client',card)?.checked?'추가 클라이언트':'추가 아동';
+  }
+
+  function ensureClientFlag(card,index){
+    if(!card)return;
+    if(index===0){syncClientBadge(card,index);return;}
+    let client=q('.aq-client',card);
+    if(!client){
+      const cohabit=q('.aq-co',card)?.closest('.aq-check');
+      let flags=q('.aq-child-flags',card);
+      if(!flags){
+        flags=document.createElement('div');
+        flags.className='aq-child-flags';
+        if(cohabit)cohabit.parentElement.insertBefore(flags,cohabit);
+        else card.append(flags);
+      }
+      if(cohabit&&cohabit.parentElement!==flags)flags.append(cohabit);
+      const label=document.createElement('label');
+      label.className='aq-check aq-client-toggle';
+      label.innerHTML='<input class="aq-client" type="checkbox"> 클라이언트';
+      flags.append(label);
+      client=q('.aq-client',card);
+    }
+    syncClientBadge(card,index);
+  }
+
+  function ensureClientFlags(){
+    installClientFlagStyles();
+    qa('#aqChildren .aq-child',form).forEach((card,index)=>ensureClientFlag(card,index));
+  }
+
+  ensureClientFlags();
+  const childList=q('#aqChildren',form);
+  if(childList){
+    new MutationObserver(()=>ensureClientFlags()).observe(childList,{childList:true});
+  }
+  form.addEventListener('change',e=>{
+    if(!e.target.classList?.contains('aq-client'))return;
+    const cards=qa('#aqChildren .aq-child',form),card=e.target.closest('.aq-child');
+    syncClientBadge(card,cards.indexOf(card));
+  });
+
   function assigned(card,childUid){const v=q('.aq-parent-target',card)?.value||'';return v==='all'||v===childUid;}
   function validate(){
     const children=qa('#aqChildren .aq-child',form),parents=qa('#aqParents .aq-parent',form),issues=[];
@@ -57,11 +118,12 @@
   }
 
   function build(){
+    ensureClientFlags();
     const issues=validate();if(issues.length){alert(`관계 설정을 확인해주세요.\n\n• ${issues.join('\n• ')}`);toast('부모·아동 관계 설정을 확인해주세요');return;}
     if(state.people.length&&!confirm('현재 가계도를 빠른 작성 내용으로 교체할까요?'))return;
     const children=qa('#aqChildren .aq-child',form),parents=qa('#aqParents .aq-parent',form),extras=qa('#aqExtras .aq-extra',form),people=[],relations=[],map=new Map();
 
-    children.forEach((c,i)=>{const p={id:id(),name:q('.aq-name',c)?.value.trim()||`대상아동${i+1}`,role:'대상자',gender:q(`input[name="g-${c.dataset.uid}"]:checked`,c)?.value||'unknown',age:q('.aq-age',c)?.value.trim()||'',life:'alive',cohabit:q('.aq-co',c)?.checked===false?'no':'yes',note:'',x:600,y:510,clientMain:i===0};people.push(p);map.set(c.dataset.uid,p);});
+    children.forEach((c,i)=>{const isClient=i===0||q('.aq-client',c)?.checked===true,p={id:id(),name:q('.aq-name',c)?.value.trim()||`대상아동${i+1}`,role:isClient?'대상자':'자녀',gender:q(`input[name="g-${c.dataset.uid}"]:checked`,c)?.value||'unknown',age:q('.aq-age',c)?.value.trim()||'',life:'alive',cohabit:q('.aq-co',c)?.checked===false?'no':'yes',note:'',x:600,y:510,clientMain:i===0,client:isClient};people.push(p);map.set(c.dataset.uid,p);});
     parents.forEach(c=>{const father=c.dataset.kind==='father',p={id:id(),name:q('.aq-name',c)?.value.trim()||(father?'부':'모'),role:father?'부':'모',gender:father?'male':'female',age:q('.aq-age',c)?.value.trim()||'',life:normLife(q('.aq-life',c)?.value),cohabit:q('.aq-co-sel',c)?.value||'unknown',note:'',x:father?420:780,y:225};people.push(p);map.set(c.dataset.uid,p);});
     extras.forEach((c,i)=>{const role=q('.aq-role',c)?.value||'기타 친척',p={id:id(),name:q('.aq-name',c)?.value.trim()||role,role,gender:q('.aq-sex',c)?.value||'unknown',age:q('.aq-age',c)?.value.trim()||'',life:'alive',cohabit:q('.aq-co-sel',c)?.value||'unknown',note:'',x:140+i*145,y:['조부','조모'].includes(role)?80:role==='자녀'?650:role==='형제·자매'?570:390};people.push(p);map.set(c.dataset.uid,p);});
 
