@@ -91,7 +91,7 @@
         <p class="export-preflight-copy">아래 필수 확인 항목 중 작성되지 않은 내용이 있습니다. 필요한 내용을 추가한 뒤 출력하는 것을 권장합니다.</p>
         <div class="export-preflight-list" id="pngExportPreflightList"></div>
         <p class="export-preflight-note">누락된 항목이 의도된 경우에는 그대로 PNG를 출력할 수 있습니다.</p>
-        <button type="button" class="export-preflight-action">그래도 출력</button>
+        <button type="button" class="export-preflight-action">최종 출력</button>
       </div>`;
     document.body.appendChild(dialog);
 
