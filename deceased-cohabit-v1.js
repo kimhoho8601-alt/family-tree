@@ -70,7 +70,7 @@
   // Keep only the top PNG action visible and route it to the currently viewed mode.
   if (!document.querySelector('script[data-unified-download]')) {
     const s = document.createElement('script');
-    s.src = 'unified-download-v1.js?v=20260911-1';
+    s.src = 'unified-download-v1.js?v=20260915-1';
     s.dataset.unifiedDownload = 'v1';
     document.body.append(s);
   }
@@ -90,6 +90,16 @@
     const s = document.createElement('script');
     s.src = 'resource-near-target-v1.js?v=20260911-1';
     s.dataset.resourceNearTarget = 'v1';
+    document.body.append(s);
+  }
+
+  // Hide the combined-page memo UI while preserving its DOM/data behavior,
+  // allow Delete/Backspace removal of a selected cohabit boundary, and omit
+  // the editor-only "동거가족" label from PNG output.
+  if (!document.querySelector('script[data-cohabit-delete-output]')) {
+    const s = document.createElement('script');
+    s.src = 'cohabit-delete-output-v1.js?v=20260915-1';
+    s.dataset.cohabitDeleteOutput = 'v1';
     document.body.append(s);
   }
 })();
