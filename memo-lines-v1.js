@@ -100,13 +100,16 @@
         text.textContent = memo || '메모 없음';
         return;
       }
-      const lines = bulletLines(memo, 20, 3);
+      const lines = bulletLines(memo, 24, 3);
       text.textContent = '';
-      text.setAttribute('y', lines.length >= 3 ? '15' : '18');
+      text.setAttribute('x', '-78');
+      text.setAttribute('y', '17');
+      text.setAttribute('text-anchor', 'start');
+      text.setAttribute('font-size', '9.5');
       lines.forEach((line,index) => {
         const tspan = document.createElementNS(SVG_NS, 'tspan');
-        tspan.setAttribute('x','0');
-        if (index) tspan.setAttribute('dy','11');
+        tspan.setAttribute('x','-78');
+        if (index) tspan.setAttribute('dy','13');
         tspan.textContent = line;
         text.append(tspan);
       });
@@ -125,13 +128,16 @@
         text.textContent = memo || '메모 없음';
         return;
       }
-      const lines = bulletLines(memo, 18, 3);
+      const lines = bulletLines(memo, 22, 3);
       text.textContent = '';
-      text.setAttribute('y', lines.length >= 3 ? '16' : '22');
+      text.setAttribute('x', '-72');
+      text.setAttribute('y', '17');
+      text.setAttribute('text-anchor', 'start');
+      text.setAttribute('font-size', '9.5');
       lines.forEach((line,index) => {
         const tspan = document.createElementNS(SVG_NS, 'tspan');
-        tspan.setAttribute('x','0');
-        if (index) tspan.setAttribute('dy','11');
+        tspan.setAttribute('x','-72');
+        if (index) tspan.setAttribute('dy','13');
         tspan.textContent = line;
         text.append(tspan);
       });
