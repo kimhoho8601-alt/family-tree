@@ -100,16 +100,16 @@
         text.textContent = memo || '메모 없음';
         return;
       }
-      const lines = bulletLines(memo, 24, 3);
+      const lines = bulletLines(memo, 18, 3);
       text.textContent = '';
-      text.setAttribute('x', '-78');
-      text.setAttribute('y', '17');
+      text.setAttribute('x', '-72');
+      text.setAttribute('y', '14');
       text.setAttribute('text-anchor', 'start');
-      text.setAttribute('font-size', '9.5');
+      text.setAttribute('font-size', '9');
       lines.forEach((line,index) => {
         const tspan = document.createElementNS(SVG_NS, 'tspan');
-        tspan.setAttribute('x','-78');
-        if (index) tspan.setAttribute('dy','13');
+        tspan.setAttribute('x','-72');
+        if (index) tspan.setAttribute('dy','11');
         tspan.textContent = line;
         text.append(tspan);
       });
@@ -128,16 +128,16 @@
         text.textContent = memo || '메모 없음';
         return;
       }
-      const lines = bulletLines(memo, 22, 3);
+      const lines = bulletLines(memo, 18, 3);
       text.textContent = '';
-      text.setAttribute('x', '-72');
-      text.setAttribute('y', '17');
+      text.setAttribute('x', '-68');
+      text.setAttribute('y', '15');
       text.setAttribute('text-anchor', 'start');
-      text.setAttribute('font-size', '9.5');
+      text.setAttribute('font-size', '9');
       lines.forEach((line,index) => {
         const tspan = document.createElementNS(SVG_NS, 'tspan');
-        tspan.setAttribute('x','-72');
-        if (index) tspan.setAttribute('dy','13');
+        tspan.setAttribute('x','-68');
+        if (index) tspan.setAttribute('dy','11');
         tspan.textContent = line;
         text.append(tspan);
       });
