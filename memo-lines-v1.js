@@ -105,6 +105,7 @@
       text.setAttribute('x', '-72');
       text.setAttribute('y', '14');
       text.setAttribute('text-anchor', 'start');
+      text.style.setProperty('text-anchor', 'start', 'important');
       text.setAttribute('font-size', '9');
       lines.forEach((line,index) => {
         const tspan = document.createElementNS(SVG_NS, 'tspan');
