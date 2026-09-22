@@ -79,7 +79,7 @@
   // simple dash-list items in both genogram and ecology editors.
   if (!document.querySelector('script[data-memo-lines]')) {
     const s = document.createElement('script');
-    s.src = 'memo-lines-v1.js?v=20260922-1';
+    s.src = 'memo-lines-v1.js?v=20260922-2';
     s.dataset.memoLines = 'v1';
     document.body.append(s);
   }
