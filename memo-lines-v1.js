@@ -103,14 +103,15 @@
       const lines = bulletLines(memo, 18, 3);
       text.textContent = '';
       text.setAttribute('x', '-72');
-      text.setAttribute('y', '14');
+      text.setAttribute('y', '11');
       text.setAttribute('text-anchor', 'start');
       text.style.setProperty('text-anchor', 'start', 'important');
-      text.setAttribute('font-size', '9');
+      text.setAttribute('font-size', '8.5');
+      text.style.setProperty('font-size', '8.5px', 'important');
       lines.forEach((line,index) => {
         const tspan = document.createElementNS(SVG_NS, 'tspan');
         tspan.setAttribute('x','-72');
-        if (index) tspan.setAttribute('dy','11');
+        if (index) tspan.setAttribute('dy','9');
         tspan.textContent = line;
         text.append(tspan);
       });
@@ -132,13 +133,15 @@
       const lines = bulletLines(memo, 18, 3);
       text.textContent = '';
       text.setAttribute('x', '-68');
-      text.setAttribute('y', '15');
+      text.setAttribute('y', '13');
       text.setAttribute('text-anchor', 'start');
-      text.setAttribute('font-size', '9');
+      text.style.setProperty('text-anchor', 'start', 'important');
+      text.setAttribute('font-size', '8.5');
+      text.style.setProperty('font-size', '8.5px', 'important');
       lines.forEach((line,index) => {
         const tspan = document.createElementNS(SVG_NS, 'tspan');
         tspan.setAttribute('x','-68');
-        if (index) tspan.setAttribute('dy','11');
+        if (index) tspan.setAttribute('dy','9');
         tspan.textContent = line;
         text.append(tspan);
       });
