@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const API_URL = 'https://ynqzzdelgaivuriyxurq.supabase.co/functions/v1/case-relation-api';
+  const API_URL = 'https://tedbkobhltarqibjhfhk.supabase.co/functions/v1/case-relation-api';
   const state = {
     notice: { title: '', body: '', is_active: false, updated_at: null },
     stats: { today: 0, total: 0, visits: 0 },
