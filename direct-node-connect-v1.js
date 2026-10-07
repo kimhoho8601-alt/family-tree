@@ -116,6 +116,7 @@
   }, true);
   document.querySelector('#relationBtn')?.addEventListener('click', clearDirectSelection, true);
   els.lineChoiceDialog?.addEventListener('close', clearDirectSelection);
+  document.addEventListener('child-add-open', () => {press = null; clearDirectSelection()});
 
   const currentRender = render;
   render = function(...args) {
