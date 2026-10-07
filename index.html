@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="styles.css?v=20260907-2" />
   <link rel="stylesheet" href="quick-entry.css" />
   <link rel="stylesheet" href="sticky-workspace-v1.css?v=20260911-2" />
-  <link rel="stylesheet" href="studio-modes-v1.css?v=20261007-3" />
+  <link rel="stylesheet" href="studio-modes-v1.css?v=20261007-5" />
 </head>
 <body>
   <header class="topbar">
@@ -75,7 +75,7 @@
         <div class="combined-side-head"><div><span>GENO + ECO</span><h2>종합 관계도 구성</h2></div><button type="button" id="combinedResetBtn">자원 초기화</button></div>
         <div class="combined-guide"><b>가계도는 자동으로 연동됩니다</b><p>가계도 탭에서 만든 구성원을 기준으로 자원과 메모를 연결하세요.</p><button type="button" id="combinedGoGenogram">가계도 구성원 편집 →</button></div>
         <section class="combined-form-section"><div class="eco-section-title"><b>1</b><div><strong>자원 추가</strong><small>기관·사람·서비스를 간단히 등록</small></div></div><form id="combinedResourceForm"><label class="eco-field"><span>자원 이름 <em>필수</em></span><input id="combinedResourceName" maxlength="24" required placeholder="예: 아동보호전문기관"></label><label class="eco-field"><span>테두리 색상</span><select id="combinedResourceColor"><option value="black">검정</option><option value="red">빨강</option><option value="blue">파랑</option></select></label><button type="submit" class="eco-add-button">＋ 자원 추가</button></form></section>
-        <section class="combined-form-section"><div class="eco-section-title"><b>2</b><div><strong>연결 대상과 관계</strong><small id="combinedSelectedLabel">자원을 선택하세요</small></div></div><label class="eco-field"><span>연결 대상</span><select id="combinedTarget" disabled><option value="family">가족 전체</option></select></label><label class="eco-field"><span>관계 강도</span><select id="combinedStrength" disabled><option value="strong">강한 지지</option><option value="normal">일반·보통</option><option value="weak">약함·취약</option><option value="stress">긴장·갈등</option></select></label><label class="eco-field"><span>자원 흐름</span><select id="combinedDirection" disabled><option value="both">상호 교류</option><option value="in">가족에게 유입</option><option value="out">가족에서 자원으로 제공</option><option value="none">방향 표시 없음</option></select></label><button type="button" id="combinedRealignMemo" class="eco-secondary-button" disabled>메모 재정렬</button><button type="button" id="combinedDeleteResource" class="eco-delete-button" disabled>선택한 자원 삭제</button></section>
+        <section class="combined-form-section"><div class="eco-section-title"><b>2</b><div><strong>연결 대상과 관계</strong><small id="combinedSelectedLabel">자원을 선택하세요</small></div></div><label class="eco-field"><span>연결 대상</span><select id="combinedTarget" disabled><option value="family">가족 전체</option></select></label><label class="eco-field"><span>관계 강도</span><select id="combinedStrength" disabled><option value="strong">강한 지지</option><option value="normal">일반·보통</option><option value="weak">약함·취약</option><option value="stress">긴장·갈등</option></select></label><label class="eco-field"><span>자원 흐름</span><select id="combinedDirection" disabled><option value="both">상호 교류</option><option value="in">가족에게 유입</option><option value="out">가족에서 자원으로 제공</option><option value="none">방향 표시 없음</option></select></label><div class="resource-size-fields"><label class="eco-field"><span>자원 박스 너비</span><input id="combinedResourceWidth" type="number" min="160" max="1000" step="10" disabled></label><label class="eco-field"><span>자원 박스 높이</span><input id="combinedResourceHeight" type="number" min="78" max="650" step="10" disabled></label></div><button type="button" id="combinedRealignMemo" class="eco-secondary-button" disabled>메모 재정렬</button><button type="button" id="combinedDeleteResource" class="eco-delete-button" disabled>선택한 자원 삭제</button></section>
         <div id="combinedResourceList" class="eco-system-list"></div>
       </aside>
       <section class="combined-canvas-panel">
@@ -117,7 +117,7 @@
   <script src="cohabit-members-v1.js?v=20260910-1"></script>
   <script src="studio-modes-v1.js?v=20260909-2"></script>
   <script src="resource-grid-edit-v1.js?v=20261007-1"></script>
-  <script src="combined-map-v1.js?v=20261007-4"></script>
+  <script src="combined-map-v1.js?v=20261007-5"></script>
   <script src="mobile-canvas-pan-v1.js?v=20260911-2"></script>
 </body>
 </html>

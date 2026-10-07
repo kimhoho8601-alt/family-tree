@@ -88,35 +88,7 @@
     return map;
   }
 
-  function renderCombinedMemos() {
-    const raw = resourceRawMap('#combinedResourceList [data-combined-resource]', 'data-combined-resource');
-    qa('#combinedResourceLayer .combined-resource[data-resource-id]').forEach(group => {
-      const id = group.getAttribute('data-resource-id');
-      const memo = raw.get(id) || '';
-      const text = group.querySelector('.resource-note');
-      if (!text || text.dataset.memoLinesSignature === memo) return;
-      text.dataset.memoLinesSignature = memo;
-      if (!memo || memo === '메모 없음') {
-        text.textContent = memo || '메모 없음';
-        return;
-      }
-      const lines = bulletLines(memo, 18, 3);
-      text.textContent = '';
-      text.setAttribute('x', '-72');
-      text.setAttribute('y', '11');
-      text.setAttribute('text-anchor', 'start');
-      text.style.setProperty('text-anchor', 'start', 'important');
-      text.setAttribute('font-size', '8.5');
-      text.style.setProperty('font-size', '8.5px', 'important');
-      lines.forEach((line,index) => {
-        const tspan = document.createElementNS(SVG_NS, 'tspan');
-        tspan.setAttribute('x','-72');
-        if (index) tspan.setAttribute('dy','9');
-        tspan.textContent = line;
-        text.append(tspan);
-      });
-    });
-  }
+  // Combined resource memo layout belongs exclusively to combined-map-v1.js.
 
   function renderEcoMemos() {
     const raw = resourceRawMap('#ecoSystemList [data-eco-list]', 'data-eco-list');
@@ -151,7 +123,6 @@
   function refresh() {
     scheduled = false;
     renderGenogramMemos();
-    renderCombinedMemos();
     renderEcoMemos();
   }
 
@@ -185,11 +156,11 @@
   const resourceMemo = q('#resourceGridMemo');
   if (resourceMemo) {
     resourceMemo.placeholder = '- 지원 내용\n- 위험 요인\n- 추가 메모';
-    resourceMemo.maxLength = Math.max(Number(resourceMemo.maxLength) || 0, 180);
+    resourceMemo.removeAttribute('maxlength');
   }
 
   const observer = new MutationObserver(schedule);
-  ['#nodeLayer','#combinedResourceLayer','#combinedResourceList','#ecoNodeLayer','#ecoSystemList']
+  ['#nodeLayer','#ecoNodeLayer','#ecoSystemList']
     .map(selector => q(selector))
     .filter(Boolean)
     .forEach(layer => observer.observe(layer, {childList:true, subtree:true, characterData:true}));
