@@ -26,3 +26,13 @@ body[data-studio-mode="combined"] .top-actions{visibility:hidden}.studio-mode-ta
 @media(max-width:620px){.resource-relation-grid{grid-template-columns:1fr}.resource-relation-grid select{height:46px}}
 @media(max-width:620px){.resource-connect-dialog form{padding:21px 18px}.resource-connect-dialog .dialog-head h2{font-size:20px}.resource-connect-fields{grid-template-columns:1fr}.resource-connect-fields select{height:48px}.resource-connect-dialog .dialog-actions{display:grid;grid-template-columns:1fr 1fr}.resource-connect-dialog .dialog-actions .button{width:100%;min-height:46px;padding:0 10px}}
 @media(max-width:620px){.cohabit-selection-bar{align-items:flex-start;flex-wrap:wrap;padding:10px 12px}.cohabit-selection-bar>div{flex-basis:100%}.cohabit-selection-bar button{height:42px}.cohabit-selection-bar>span{margin-right:auto}}
+
+
+/* Resource node resize + multi-link editor */
+.resource-resize-handle{fill:#fff;stroke:#c9002b;stroke-width:2;cursor:nwse-resize;pointer-events:all}
+.resource-relation-row select{width:100%}
+.resource-relation-row [data-rel-remove]:disabled{opacity:.35;cursor:not-allowed}
+@media (max-width:760px){
+  .resource-relation-row{grid-template-columns:1fr!important}
+  .resource-relation-row [data-rel-remove]{height:44px!important}
+}
