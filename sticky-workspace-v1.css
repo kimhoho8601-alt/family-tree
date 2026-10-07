@@ -1,4 +1,4 @@
-:root{--app-header-h:72px;--canvas-toolbar-h:78px}
+:root{--app-header-h:72px;--studio-switcher-h:94px;--canvas-toolbar-h:78px}
 
 /* Keep the global file actions available while the page scrolls. */
 .topbar{
@@ -6,6 +6,19 @@
   top:0;
   z-index:1000;
   box-shadow:0 4px 16px rgba(55,28,34,.05);
+}
+
+
+/* Keep the main workflow switcher visible while editing lower on the page. */
+.studio-switcher{
+  position:sticky;
+  top:var(--app-header-h);
+  z-index:900;
+  min-height:var(--studio-switcher-h);
+  background:rgba(255,255,255,.985);
+  box-shadow:0 7px 20px rgba(55,28,34,.07);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
 }
 
 /* Keep the same global actions visible in every studio mode. */
@@ -23,7 +36,7 @@ body[data-studio-mode="combined"] .top-actions{
 
 .sidebar{
   position:sticky;
-  top:calc(var(--app-header-h) + 12px);
+  top:calc(var(--app-header-h) + var(--studio-switcher-h) + 12px);
   align-self:start;
   height:calc(100vh - var(--app-header-h) - 24px);
   max-height:calc(100vh - var(--app-header-h) - 24px);
@@ -91,7 +104,7 @@ body[data-studio-mode="combined"] .top-actions{
 
 .canvas-toolbar{
   position:sticky;
-  top:var(--app-header-h);
+  top:calc(var(--app-header-h) + var(--studio-switcher-h));
   z-index:500;
   background:rgba(255,255,255,.98);
   backdrop-filter:blur(10px);
@@ -108,7 +121,7 @@ body[data-studio-mode="combined"] .top-actions{
 
 #cohabitSelectionBar{
   position:sticky;
-  top:calc(var(--app-header-h) + var(--canvas-toolbar-h));
+  top:calc(var(--app-header-h) + var(--studio-switcher-h) + var(--canvas-toolbar-h));
   z-index:495;
   width:calc(100% - 32px);
   max-width:none;
@@ -145,11 +158,12 @@ body[data-studio-mode="combined"] .top-actions{
 
 .connection-bar{
   position:sticky;
-  top:calc(var(--app-header-h) + 78px);
+  top:calc(var(--app-header-h) + var(--studio-switcher-h) + 78px);
   z-index:490;
 }
 
 @media(max-width:1200px) and (min-width:901px){
+  :root{--studio-switcher-h:150px}
   .sidebar>.mode-tabs{
     position:sticky!important;
     top:0!important;
@@ -167,6 +181,7 @@ body[data-studio-mode="combined"] .top-actions{
 }
 
 @media(max-width:900px){
+  :root{--studio-switcher-h:150px}
   .sidebar{
     position:relative;
     top:auto;
@@ -179,7 +194,7 @@ body[data-studio-mode="combined"] .top-actions{
   /* The page scrolls on mobile, so pin the tabs below the sticky app header. */
   .sidebar>.mode-tabs{
     position:sticky!important;
-    top:var(--app-header-h)!important;
+    top:calc(var(--app-header-h) + var(--studio-switcher-h))!important;
     z-index:980!important;
     margin-top:0!important;
     margin-left:0;
@@ -187,7 +202,7 @@ body[data-studio-mode="combined"] .top-actions{
     background:#fff!important;
   }
   .sidebar>.side-panel.active{overflow:visible;padding-right:0}
-  .canvas-toolbar{top:var(--app-header-h)}
+  .canvas-toolbar{top:calc(var(--app-header-h) + var(--studio-switcher-h))}
   #cohabitSelectionBar{
     position:relative;
     top:auto;
@@ -218,8 +233,8 @@ html.touch-canvas-device .sidebar>.mode-tabs{
 }
 
 @media(max-width:560px){
-  :root{--app-header-h:64px}
-  .connection-bar{top:calc(var(--app-header-h) + 112px)}
+  :root{--app-header-h:64px;--studio-switcher-h:238px}
+  .connection-bar{top:calc(var(--app-header-h) + var(--studio-switcher-h) + 112px)}
   #cohabitSelectionBar{grid-template-columns:1fr 1fr;gap:8px;padding:12px}
   #cohabitSelectionBar>div,#cohabitSelectionCount{grid-column:1/-1}
   #cohabitSelectionCancel,#cohabitSelectionCreate{width:100%}
