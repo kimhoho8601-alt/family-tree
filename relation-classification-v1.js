@@ -184,15 +184,26 @@
     dialog.innerHTML = `<form method="dialog" id="relationEditForm">
       <div class="dialog-head"><div><p class="eyebrow">EDIT RELATIONSHIP</p><h2>연결선 수정</h2></div><button type="button" class="dialog-close" id="closeRelationEdit" aria-label="닫기">×</button></div>
       <input type="hidden" id="editRelationId">
-      <div class="relation-pair-card"><b id="editRelationPair">구성원 ↔ 구성원</b><small>연결 대상은 유지하고 선 종류만 변경합니다.</small></div>
+      <div class="relation-pair-card"><b id="editRelationPair">구성원 ↔ 구성원</b><small>두 구성원의 관계를 변경합니다. 부모선은 부모·자녀 방향을 선택하세요.</small></div>
       <label class="relation-edit-field"><span>관계선 종류 <i class="rel-tag core">기본</i><i class="rel-tag optional">선택</i></span><select id="editRelationType">${coreOptions(true)}</select></label>
+      <div id="editParentDirectionField" hidden>
+        <label class="relation-edit-field"><span>부모 → 자녀 방향</span><select id="editParentDirection" required disabled></select></label>
+        <p class="relation-edit-help">부모와 자녀를 확인한 뒤 방향을 선택하세요.</p>
+      </div>
       <p class="relation-edit-help">기본 관계선은 가족 구조를 나타냅니다. 친밀·갈등 같은 관계 특성은 필요한 경우에만 추가하거나 변경하세요.</p>
       <div class="dialog-actions"><button type="button" class="button ghost" id="cancelRelationEdit">취소</button><button type="submit" class="button primary">변경 저장</button></div>
     </form>`;
     document.body.append(dialog);
     document.querySelector('#closeRelationEdit').onclick = () => dialog.close();
     document.querySelector('#cancelRelationEdit').onclick = () => dialog.close();
+    document.querySelector('#editRelationType').addEventListener('change', updateParentDirectionField);
     document.querySelector('#relationEditForm').addEventListener('submit', onEditSubmit);
+  }
+
+  function updateParentDirectionField() {
+    const isParent = document.querySelector('#editRelationType').value === 'parent';
+    document.querySelector('#editParentDirectionField').hidden = !isParent;
+    document.querySelector('#editParentDirection').disabled = !isParent;
   }
 
   function openRelationEditor(rid) {
@@ -205,6 +216,12 @@
     document.querySelector('#editRelationPair').textContent = `${a?.name || '구성원'} ↔ ${b?.name || '구성원'}`;
     const select = document.querySelector('#editRelationType');
     select.value = relation.type;
+    const direction = document.querySelector('#editParentDirection');
+    const aName = a?.name || '구성원 1';
+    const bName = b?.name || '구성원 2';
+    direction.innerHTML = `<option value="">부모·자녀 방향을 선택하세요</option><option value="forward">부모: ${escRel(aName)} → 자녀: ${escRel(bName)}</option><option value="reverse">부모: ${escRel(bName)} → 자녀: ${escRel(aName)}</option>`;
+    direction.value = relation.type === 'parent' ? 'forward' : '';
+    updateParentDirectionField();
     document.querySelector('#relationEditDialog').showModal();
   }
 
@@ -217,8 +234,17 @@
     const samePair = r => r.id !== rid && pairMatches(r, relation.from, relation.to);
 
     if (nextType === 'parent') {
-      const duplicate = state.relations.some(r => r.id !== rid && r.type === 'parent' && r.from === relation.from && r.to === relation.to);
+      const direction = document.querySelector('#editParentDirection').value;
+      if (!['forward', 'reverse'].includes(direction)) { toast('부모·자녀 방향을 선택해주세요'); return; }
+      const from = direction === 'forward' ? relation.from : relation.to;
+      const to = direction === 'forward' ? relation.to : relation.from;
+      if (from === to || !state.people.some(p => p.id === from) || !state.people.some(p => p.id === to)) {
+        toast('연결할 두 구성원을 확인해주세요'); return;
+      }
+      const duplicate = state.relations.some(r => r.id !== rid && r.type === 'parent' && r.from === from && r.to === to);
       if (duplicate) { toast('이미 등록된 부모–자녀 연결입니다'); return; }
+      relation.from = from;
+      relation.to = to;
     } else if (CORE_TYPES.has(nextType)) {
       state.relations = state.relations.filter(r => !(samePair(r) && ['marriage','separated','divorced'].includes(r.type)));
     } else if (OPTIONAL_TYPES.has(nextType)) {
