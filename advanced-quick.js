@@ -89,7 +89,7 @@
     layoutParents(people,relations);layoutChildren(people,relations);state.people=people;state.relations=relations;state.zoom=1;save();render();activatePanel('editPanel');toast('부모·아동 관계선을 분리해 가계도를 만들었습니다')
   },true);
 
-  const pf=q('#personForm');if(pf)pf.addEventListener('submit',e=>{e.preventDefault();e.stopImmediatePropagation();const ex=state.people.find(p=>p.id===q('#personId').value),role=q('#personRole').value,data={id:ex?.id||id(),name:q('#personName').value.trim(),role,gender:q('[name=gender]:checked').value,age:q('#personAge').value.trim(),life:q('#personLife').value,cohabit:q('#personCohabit').value,note:q('#personNote').value.trim(),...(ex?{x:ex.x,y:ex.y}:autoPosition(role))};if(ex)Object.assign(ex,data);else state.people.push(data);els.personDialog.close();save();render();toast(ex?'구성원 정보를 수정했습니다':'구성원을 추가했습니다')},true);
+  const pf=q('#personForm');if(pf)pf.addEventListener('submit',e=>{e.preventDefault();e.stopImmediatePropagation();const ex=state.people.find(p=>p.id===q('#personId').value),role=q('#personRole').value,data={id:ex?.id||id(),name:q('#personName').value.trim(),role,gender:q('[name=gender]:checked').value,age:q('#personAge').value.trim(),life:q('#personLife').value,cohabit:q('#personCohabit').value,note:q('#personNote').value.trim(),...personClientFlags(role,ex),...(ex?{x:ex.x,y:ex.y}:autoPosition(role))};if(ex)Object.assign(ex,data);else state.people.push(data);els.personDialog.close();save();render();toast(ex?'구성원 정보를 수정했습니다':'구성원을 추가했습니다')},true);
 
   const baseRenderRelations=renderRelations;
   function routeParentGroups(){
