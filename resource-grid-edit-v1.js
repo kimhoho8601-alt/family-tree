@@ -34,7 +34,7 @@
     const row=remove.closest('[data-relation-row]');row?.remove();
   });
   window.openResourceGridEditor=(resource,onSave,options={})=>{
-    commit=onSave;name.value=resource?.name||'';memo.value=normalizeMemo(resource?.note??resource?.memo??'');colorField.hidden=!options.colors;color.value=['black','red','blue'].includes(resource?.color)?resource.color:'black';
+    commit=onSave;name.value=resource?.name||'';memo.value=normalizeMemo(resource?.memoFull??resource?.memo??resource?.note??'');colorField.hidden=!options.colors;color.value=['black','red','blue'].includes(resource?.color)?resource.color:'black';
     const targets=Array.isArray(options.targets)?options.targets:null;relationFields.hidden=!targets;
     if(targets){
       currentTargets=targets;
