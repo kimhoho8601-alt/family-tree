@@ -13,7 +13,7 @@
     <div class="form-grid">
       <label><span>식별명</span><input id="newChildName" required maxlength="20" placeholder="예: 자녀 2"></label>
       <label><span>나이·출생연도</span><input id="newChildAge" maxlength="20" placeholder="예: 8세"></label>
-      <fieldset class="full"><legend>성별</legend><div class="gender-choice"><label><input type="radio" name="newChildGender" value="male" checked><span>□ 남성</span></label><label><input type="radio" name="newChildGender" value="female"><span>○ 여성</span></label><label><input type="radio" name="newChildGender" value="unknown"><span>◇ 미상</span></label></div></fieldset>
+      <fieldset class="full"><legend>성별</legend><div class="segmented"><label><input type="radio" name="newChildGender" value="male" checked><span>□ 남성</span></label><label><input type="radio" name="newChildGender" value="female"><span>○ 여성</span></label><label><input type="radio" name="newChildGender" value="unknown"><span>◇ 미상</span></label></div></fieldset>
       <label><span>생존 상태</span><select id="newChildLife"><option value="alive">생존</option><option value="dead">사망</option><option value="unknown">미상</option></select></label>
       <label><span>동거 여부</span><select id="newChildCohabit"><option value="yes">동거</option><option value="no">비동거</option><option value="unknown">미상</option></select></label>
       <label class="full"><span>대상아동 여부</span><select id="newChildClient"><option value="no">일반 자녀 · 클라이언트 표시 없음</option><option value="yes">대상아동 · 클라이언트 표시</option></select></label>
@@ -50,14 +50,44 @@
     requestAnimationFrame(() => q('#newChildName').focus());
   }
 
+  const relationDialog = q('#relationEditDialog');
+  const childMenu = document.createElement('details');
+  childMenu.id = 'relationChildMenu';
+  childMenu.innerHTML = '<summary>자녀 추가</summary><p class="relation-edit-help">현재 관계선의 두 구성원을 부모로 지정해 자녀를 추가합니다.</p><button type="button" class="button soft">＋ 자녀 추가</button>';
+  relationDialog?.querySelector('.dialog-actions').before(childMenu);
+  function menuParents() {
+    const relation = state.relations.find(item => item.id === q('#editRelationId').value);
+    return relation && structural.has(relation.type) ? [relation.from, relation.to] : null;
+  }
+  childMenu.querySelector('button').addEventListener('click', () => {
+    const ids = menuParents();
+    if (!ids) return;
+    relationDialog.close();
+    openChild(ids);
+  });
+  if (relationDialog) new MutationObserver(() => {
+    if (!relationDialog.open) return;
+    childMenu.hidden = !menuParents();
+    childMenu.open = false;
+  }).observe(relationDialog, {attributes:true, attributeFilter:['open']});
+
   document.addEventListener('dblclick', event => {
     if (event.button !== 0 || document.querySelector('dialog[open]') || window.__COHABIT_PICK_MODE__) return;
     if (typeof connectMode !== 'undefined' && connectMode.delete) return;
-    const ids = parentsForGroup(event.target.closest?.('.relation-group'));
+    const group = event.target.closest?.('.relation-group');
+    const ids = parentsForGroup(group);
     if (!ids) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    openChild(ids);
+    if (typeof stopConnection === 'function') stopConnection();
+    document.dispatchEvent(new CustomEvent('child-add-open'));
+    let relation = state.relations.find(item => item.id === group.dataset.relation);
+    if (!relation) {
+      relation = {id:id(), from:ids[0], to:ids[1], type:'marriage'};
+      state.relations.push(relation);
+      save(); render();
+    }
+    document.dispatchEvent(new CustomEvent('relation-edit-request', {detail:relation.id}));
   }, true);
 
   function layoutSiblings(ids, created) {

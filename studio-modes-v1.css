@@ -53,3 +53,5 @@ body[data-studio-mode="combined"] .top-actions{visibility:hidden}.studio-mode-ta
 .eco-secondary-button:disabled{opacity:.4;cursor:default}
 
 .resource-size-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+#parentChildAddDialog .segmented label{position:relative;cursor:pointer}#parentChildAddDialog .segmented input{width:auto;padding:0}#parentChildAddDialog .segmented span{margin:0;font-size:13px}#relationChildMenu{margin-top:18px;padding:14px;border:1px solid #e8dfe1;border-radius:10px;background:#fff8fa}#relationChildMenu summary{cursor:pointer;color:#c9002b;font-size:13px;font-weight:700}#relationChildMenu[hidden]{display:none}#relationChildMenu .button{margin-top:10px}

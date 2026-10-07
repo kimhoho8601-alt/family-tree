@@ -336,6 +336,7 @@
   enhanceAdvancedQuick();
   updateCopy();
   ensureEditDialog();
+  document.addEventListener('relation-edit-request', event => openRelationEditor(event.detail));
   addEditToolbarButton();
   addCanvasDoubleClick();
   overrideAddConnection();
