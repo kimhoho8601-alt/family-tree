@@ -31,7 +31,7 @@
   if(saveBtn)saveBtn.onclick=()=>{
     if(!state.people.length){toast('저장할 가계도가 없습니다');return;}
     save();
-    const data={version:2,savedAt:new Date().toISOString(),people:state.people,relations:state.relations,zoom:state.zoom,cohabitBox:state.cohabitBox||null};
+    const data={version:3,cohabitColors:state.cohabitColors||['#33272a','#c9002b'],cohabitMemberIds:state.cohabitMemberIds||[],cohabitSecondMemberIds:state.cohabitSecondMemberIds||[],cohabitSelectionVersion:2,savedAt:new Date().toISOString(),people:state.people,relations:state.relations,zoom:state.zoom,cohabitBox:state.cohabitBox||null};
     const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download=`가계도_작업파일_${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);toast('작업 파일을 저장했습니다');
   };
@@ -46,6 +46,10 @@
       state.people=data.people;
       state.relations=data.relations;
       state.zoom=Number(data.zoom)||1;
+      state.cohabitMemberIds=Array.isArray(data.cohabitMemberIds)?data.cohabitMemberIds:state.people.filter(p=>p.life!=='dead'&&['yes','true','1','동거'].includes(String(p.cohabit).toLowerCase())).map(p=>p.id);
+      state.cohabitSecondMemberIds=Array.isArray(data.cohabitSecondMemberIds)?data.cohabitSecondMemberIds:[];
+      state.cohabitSelectionVersion=2;
+      state.cohabitColors=['#33272a','#c9002b'].map((fallback,index)=>typeof data.cohabitColors?.[index]==='string'&&/^#[0-9a-f]{6}$/i.test(data.cohabitColors[index])?data.cohabitColors[index]:fallback);
       state.cohabitBox=data.cohabitBox&&[data.cohabitBox.x,data.cohabitBox.y,data.cohabitBox.w,data.cohabitBox.h].every(Number.isFinite)?{...data.cohabitBox}:null;
       save();render();activatePanel('editPanel');toast('작업 파일을 불러왔습니다');
     }catch{toast('가계도 작업 파일을 확인해주세요');}

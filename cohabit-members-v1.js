@@ -2,7 +2,13 @@
   if(typeof state==='undefined'||typeof els==='undefined'||typeof renderRelations!=='function')return;
   const button=document.querySelector('#cohabitSelectBtn'),bar=document.querySelector('#cohabitSelectionBar'),count=document.querySelector('#cohabitSelectionCount'),create=document.querySelector('#cohabitSelectionCreate'),cancel=document.querySelector('#cohabitSelectionCancel');
   if(!button||!bar)return;
-  const chosen=new Set();let active=false;
+  const secondButton=document.querySelector('#cohabitSecondSelectBtn');
+  const chosen=new Set();let active=false,groupIndex=0;
+  const defaultColors=['#33272a','#c9002b'];
+  const validColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value:fallback;
+  const colors=()=>defaultColors.map((fallback,index)=>validColor(state.cohabitColors?.[index],fallback));
+  const colorInputs=[document.querySelector('#cohabitColor1'),document.querySelector('#cohabitColor2')];
+  const memberKey=()=>groupIndex===1?'cohabitSecondMemberIds':'cohabitMemberIds';
   const validIds=()=>new Set(state.people.map(person=>person.id));
   const pickVisualBackup=new WeakMap();
 
@@ -62,6 +68,10 @@
       if(persisted.cohabitBox&&typeof persisted.cohabitBox==='object')state.cohabitBox={...persisted.cohabitBox};
     }
   }catch{}
+
+  try{const persisted=JSON.parse(localStorage.getItem('genogram-studio')||'null');state.cohabitSecondMemberIds=Array.isArray(persisted?.cohabitSecondMemberIds)?persisted.cohabitSecondMemberIds.filter(id=>validIds().has(id)):[];}catch{state.cohabitSecondMemberIds=[];}
+
+  try{const persisted=JSON.parse(localStorage.getItem('genogram-studio')||'null');state.cohabitColors=defaultColors.map((fallback,index)=>validColor(persisted?.cohabitColors?.[index],fallback));}catch{state.cohabitColors=[...defaultColors];}
 
   if(state.cohabitSelectionVersion!==2){const legacy=state.people.filter(person=>person.life!=='dead'&&['yes','true','1','동거'].includes(String(person.cohabit).toLowerCase())).map(person=>person.id);state.cohabitMemberIds=legacy;state.cohabitSelectionVersion=2;state.cohabitBox=null;save();}
 
@@ -125,8 +135,9 @@
     return{path,x,y};
   }
 
-  function boundaryMarkup(){
-    const ids=(state.cohabitMemberIds||[]).filter(id=>validIds().has(id));state.cohabitMemberIds=ids;if(!ids.length)return'';
+  function boundaryMarkup(index=0){
+    const key=index===1?'cohabitSecondMemberIds':'cohabitMemberIds',color=colors()[index];
+    const ids=(state[key]||[]).filter(id=>validIds().has(id));state[key]=ids;if(!ids.length)return'';
     const members=ids.map(id=>state.people.find(person=>person.id===id)).filter(Boolean),memberSet=new Set(ids),outsiders=state.people.filter(person=>!memberSet.has(person.id));
 
     let shape;
@@ -142,23 +153,34 @@
     }
 
     const labelY=shape.y>24?shape.y-8:shape.y+18;
-    return`<g class="cohabit-boundary-members" pointer-events="none"><path d="${shape.path}" fill="none" stroke="#33272a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${shape.x+12}" y="${labelY}" fill="#33272a" font-size="12" font-weight="700">동거가족</text></g>`;
+    return`<g class="cohabit-boundary-members" data-cohabit-group="${index}" pointer-events="none"><path style="stroke:${color}" d="${shape.path}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${shape.x+12}" y="${labelY}" fill="${color}" font-size="12" font-weight="700">동거가족 ${index+1}</text></g>`;
   }
 
-  const previous=renderRelations;renderRelations=function(...args){const result=previous.apply(this,args);els.relations.querySelectorAll('.cohabit-boundary,.cohabit-boundary-v2,.cohabit-boundary-v3,.cohabit-boundary-members').forEach(node=>node.remove());const markup=boundaryMarkup();if(markup)els.relations.insertAdjacentHTML('afterbegin',markup);sync();return result};
+  const previous=renderRelations;renderRelations=function(...args){const result=previous.apply(this,args);els.relations.querySelectorAll('.cohabit-boundary,.cohabit-boundary-v2,.cohabit-boundary-v3,.cohabit-boundary-members').forEach(node=>node.remove());const markup=boundaryMarkup(0)+boundaryMarkup(1);if(markup)els.relations.insertAdjacentHTML('afterbegin',markup);sync();return result};
   function sync(){
     const ids=validIds();
     state.cohabitMemberIds=(state.cohabitMemberIds||[]).filter(id=>ids.has(id));
+    state.cohabitSecondMemberIds=(state.cohabitSecondMemberIds||[]).filter(id=>ids.has(id));
+    for(const id of chosen)if(!ids.has(id))chosen.delete(id);
+    if(active&&!state.people.length){active=false;window.__COHABIT_PICK_MODE__=false;chosen.clear();bar.hidden=true;}
     els.nodes.querySelectorAll('.node[data-id]').forEach(node=>applyPickVisual(node,active&&chosen.has(node.dataset.id)));
     count.textContent=`${chosen.size}명 선택`;
-    create.disabled=!chosen.size&&!(state.cohabitMemberIds||[]).length;
+    create.disabled=!chosen.size&&!(state[memberKey()]||[]).length;
     create.textContent=chosen.size?'생성':'지정 해제';
-    button.classList.toggle('active-tool',active);
+    button.classList.toggle('active-tool',active&&groupIndex===0);
+    secondButton?.classList.toggle('active-tool',active&&groupIndex===1);
+    document.querySelector('#cohabitSelectionGuide').textContent=`동거가족 ${groupIndex+1} 구성원을 선택하세요`;
+    const groupColors=colors();
+    colorInputs.forEach((input,index)=>{if(input)input.value=groupColors[index]});
+    [button,secondButton].forEach((control,index)=>{if(control){control.style.color=groupColors[index];control.style.borderColor=groupColors[index]}});
   }
   function stop(){active=false;window.__COHABIT_PICK_MODE__=false;chosen.clear();bar.hidden=true;sync()}
-  button.addEventListener('click',()=>{if(!state.people.length){toast('먼저 가계도 구성원을 만들어주세요');return}active=true;window.__COHABIT_PICK_MODE__=true;chosen.clear();(state.cohabitMemberIds||[]).forEach(id=>{if(validIds().has(id))chosen.add(id)});bar.hidden=false;sync();toast('동거가족으로 표시할 구성원을 선택하세요')});
+  function start(index){groupIndex=index;if(!state.people.length){toast('먼저 가계도 구성원을 만들어주세요');return}active=true;window.__COHABIT_PICK_MODE__=true;chosen.clear();(state[memberKey()]||[]).forEach(id=>{if(validIds().has(id))chosen.add(id)});bar.hidden=false;sync();toast('동거가족으로 표시할 구성원을 선택하세요')}
+  button.addEventListener('click',()=>start(0));
+  secondButton?.addEventListener('click',()=>start(1));
   cancel.addEventListener('click',stop);
-  create.addEventListener('click',()=>{state.cohabitMemberIds=[...chosen];state.cohabitSelectionVersion=2;state.cohabitBox=null;save();const hasMembers=chosen.size>0;stop();render();toast(hasMembers?'선택한 구성원으로 동거가족 범위를 만들었습니다':'동거가족 지정을 해제했습니다')});
+  colorInputs.forEach((input,index)=>input?.addEventListener('input',()=>{const next=colors();next[index]=validColor(input.value,defaultColors[index]);state.cohabitColors=next;save();render();}));
+  create.addEventListener('click',()=>{state[memberKey()]=[...chosen];state.cohabitSelectionVersion=2;state.cohabitBox=null;save();const hasMembers=chosen.size>0;stop();render();toast(hasMembers?'선택한 구성원으로 동거가족 범위를 만들었습니다':'동거가족 지정을 해제했습니다')});
   els.nodes.addEventListener('pointerdown',event=>{if(!active)return;const node=event.target.closest?.('.node[data-id]');if(!node)return;event.preventDefault();event.stopImmediatePropagation();const id=node.dataset.id;chosen.has(id)?chosen.delete(id):chosen.add(id);sync()},true);
   document.addEventListener('keydown',event=>{if(active&&event.key==='Escape'){event.preventDefault();stop()}},true);
   function hideLegacyFields(){document.querySelectorAll('.aq-check').forEach(label=>{if(label.querySelector('.aq-co'))label.hidden=true});document.querySelectorAll('.aq-co-sel').forEach(select=>{const field=select.closest('.aq-field');if(field)field.hidden=true})}

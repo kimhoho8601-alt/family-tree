@@ -88,6 +88,8 @@
     state.relations = [];
     state.zoom = 1;
     state.cohabitMemberIds = [];
+    state.cohabitSecondMemberIds = [];
+    state.cohabitColors = ['#33272a','#c9002b'];
     state.cohabitSelectionVersion = 2;
     state.cohabitBox = null;
     save();

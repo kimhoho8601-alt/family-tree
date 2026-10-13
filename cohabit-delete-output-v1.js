@@ -43,7 +43,7 @@
       return;
     }
 
-    if (selectedBoundary && !event.target.closest?.('#cohabitSelectBtn,#cohabitSelectionBar')) {
+    if (selectedBoundary && !event.target.closest?.('#cohabitSelectBtn,#cohabitSecondSelectBtn,#cohabitColor1,#cohabitColor2,#cohabitSelectionBar')) {
       clearBoundarySelection();
     }
   }, true);
@@ -56,7 +56,8 @@
 
     event.preventDefault();
     event.stopImmediatePropagation();
-    state.cohabitMemberIds = [];
+    const key=selectedBoundary.dataset.cohabitGroup==='1'?'cohabitSecondMemberIds':'cohabitMemberIds';
+    state[key] = [];
     state.cohabitSelectionVersion = 2;
     state.cohabitBox = null;
     clearBoundarySelection();

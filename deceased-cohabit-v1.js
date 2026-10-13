@@ -46,7 +46,7 @@
   // New drawing flow: replace the old reset action with a clean blank-canvas reset.
   if (!document.querySelector('script[data-new-drawing-reset]')) {
     const s = document.createElement('script');
-    s.src = 'new-drawing-reset-v1.js?v=20260911-1';
+    s.src = 'new-drawing-reset-v1.js?v=20261013-2';
     s.dataset.newDrawingReset = 'v1';
     document.body.append(s);
   }
@@ -98,7 +98,7 @@
   // the editor-only "동거가족" label from PNG output.
   if (!document.querySelector('script[data-cohabit-delete-output]')) {
     const s = document.createElement('script');
-    s.src = 'cohabit-delete-output-v1.js?v=20260915-1';
+    s.src = 'cohabit-delete-output-v1.js?v=20261013-2';
     s.dataset.cohabitDeleteOutput = 'v1';
     document.body.append(s);
   }
