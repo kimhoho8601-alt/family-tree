@@ -141,62 +141,70 @@
     const originalGroups=[state.cohabitMemberIds||[],state.cohabitSecondMemberIds||[]].map(ids=>state.people.filter(p=>ids.includes(p.id)));
     // Reserve the compact group first, independent of its number or color.
     const area=members=>members.length?(Math.max(...members.map(p=>p.x))-Math.min(...members.map(p=>p.x))+128)*(Math.max(...members.map(p=>p.y))-Math.min(...members.map(p=>p.y))+160):0;
-    const order=[0,1].sort((a,b)=>area(originalGroups[a])-area(originalGroups[b]));
+    const order=[0,1].filter(index=>originalGroups[index].length).sort((a,b)=>area(originalGroups[a])-area(originalGroups[b]));
     const groups=order.map(index=>originalGroups[index]);
-    if(groups.some(group=>!group.length)||groups[0].some(p=>groups[1].some(q=>q.id===p.id)))return null;
+    if(!groups.length)return null;
+    if(groups.length>1&&groups[0].some(p=>groups[1].some(q=>q.id===p.id)))return null;
     const step=8,cols=148,rows=88,size=cols*rows,at=(x,y)=>y*cols+x;
-    const cellPoint=i=>({x:8+(i%cols+.5)*step,y:8+(Math.floor(i/cols)+.5)*step});
-    const rectangles=(members,px=64,top=72,bottom=88)=>{const result=new Set();for(const p of members){const x1=Math.max(0,Math.floor((p.x-px-8)/step)),x2=Math.min(cols-1,Math.floor((p.x+px-8)/step)),y1=Math.max(0,Math.floor((p.y-top-8)/step)),y2=Math.min(rows-1,Math.floor((p.y+bottom-8)/step));for(let y=y1;y<=y2;y++)for(let x=x1;x<=x2;x++)result.add(at(x,y))}return result};
+    const center=p=>({x:Math.max(0,Math.min(cols-1,Math.floor((p.x-8)/step))),y:Math.max(0,Math.min(rows-1,Math.floor((p.y-8)/step)))});
+    const rectangles=(members,px=56,top=56,bottom=80)=>{const result=new Set();for(const p of members){const x1=Math.max(0,Math.floor((p.x-px-8)/step)),x2=Math.min(cols-1,Math.floor((p.x+px-8)/step)),y1=Math.max(0,Math.floor((p.y-top-8)/step)),y2=Math.min(rows-1,Math.floor((p.y+bottom-8)/step));for(let y=y1;y<=y2;y++)for(let x=x1;x<=x2;x++)result.add(at(x,y))}return result};
     const expand=(cells,r)=>{const out=new Set();for(const i of cells){const x=i%cols,y=Math.floor(i/cols);for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)if(x+dx>=0&&x+dx<cols&&y+dy>=0&&y+dy<rows)out.add(at(x+dx,y+dy))}return out};
-    const masks=[];let expandFirst=new Set();
-    for(let index=0;index<2;index++){
+    const masks=[];
+    for(let index=0;index<groups.length;index++){
       const members=groups[index],memberIds=new Set(members.map(p=>p.id)),foreign=state.people.filter(p=>!memberIds.has(p.id));
-      // Leave room for both the other group's outline and a visible gap.
-      // A completed group is one obstacle. Separate member obstacles would
-      // leave tiny steps at the bottom of an otherwise rectangular outline.
-      const obstacles=index===1?foreign.filter(p=>!groups[0].some(q=>q.id===p.id)):foreign;
-      const forbidden=rectangles(obstacles,96,104,120);
-      if(index===1)for(const i of expand(masks[0],2))forbidden.add(i);
-      const occupied=rectangles(members),connected=rectangles([members[0]]);
-      // Prefer one clean rounded rectangle when it can enclose this group safely.
+      const forbidden=rectangles(foreign,64,64,88);
+      if(index>0)for(const previousMask of masks)for(const i of expand(previousMask,1))forbidden.add(i);
+      const occupied=rectangles(members),connected=rectangles([members[0]]),blocked=expand(forbidden,2);
+      // A compact rectangle is appropriate for people in the same row/column.
+      // Diagonal groups use a narrow connecting corridor, never a filled box.
       const xs=[...occupied].map(i=>i%cols),ys=[...occupied].map(i=>Math.floor(i/cols)),box=new Set();
       const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
-      for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++)box.add(at(x,y));
-      if(![...box].some(i=>forbidden.has(i))){for(const i of box){occupied.add(i);connected.add(i)}}
-      else {
-        // Fill the group's bounding rectangle, cutting out only obstacles.
-        // This produces a broad, clean L rather than narrow stepped corridors.
-        const candidate=new Set([...box].filter(i=>!forbidden.has(i)||occupied.has(i)));
-        const start=occupied.values().next().value,component=new Set([start]),queue=[start];
-        for(let head=0;head<queue.length;head++){
-          const i=queue[head],x=i%cols,y=Math.floor(i/cols);
-          for(const j of [x>0?i-1:-1,x<cols-1?i+1:-1,y>0?i-cols:-1,y<rows-1?i+cols:-1])if(candidate.has(j)&&!component.has(j)){component.add(j);queue.push(j)}
-        }
-        if([...occupied].every(i=>component.has(i))){for(const i of component){occupied.add(i);connected.add(i)}}
-      }
-      for(const member of members.slice(1)){
-        const targets=rectangles([member]);
+      const aligned=Math.max(...members.map(p=>p.x))-Math.min(...members.map(p=>p.x))<=16||Math.max(...members.map(p=>p.y))-Math.min(...members.map(p=>p.y))<=16;
+      if(aligned){for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++)box.add(at(x,y));if(![...box].some(i=>forbidden.has(i)))for(const i of box){occupied.add(i);connected.add(i)}}
+
+      for(let memberIndex=1;memberIndex<members.length;memberIndex++){
+        const member=members[memberIndex],targets=rectangles([member]);
         if([...targets].every(i=>connected.has(i)))continue;
-        const previous=new Int32Array(size).fill(-2),queue=[];
-        for(const i of connected){previous[i]=-1;queue.push(i)}
-        let reached=-1;
-        for(let head=0;head<queue.length&&reached<0;head++){
-          const i=queue[head];if(targets.has(i)){reached=i;break}
-          const x=i%cols,y=Math.floor(i/cols);
-          for(const j of [x>0?i-1:-1,x<cols-1?i+1:-1,y>0?i-cols:-1,y<rows-1?i+cols:-1]){
-            if(j<0||previous[j]!==-2)continue;
-            // A corridor has a 24px half-width, so its center needs clearance.
-            const point=cellPoint(j);
-            if(foreign.some(p=>Math.abs(point.x-p.x)<120&&point.y>p.y-128&&point.y<p.y+144))continue;
-            if(index===1&&expandFirst.has(j))continue;
-            previous[j]=i;queue.push(j);
+        const target=center(member);let best=null;
+        const consider=(points,startMember)=>{
+          // Give endpoint segments the width of their person boxes. This
+          // removes small shoulders where a narrow corridor meets a box.
+          const route=new Set();let length=0;
+          for(let n=1;n<points.length;n++){
+            const a=points[n-1],b=points[n];if(a.x===b.x&&a.y===b.y)continue;
+            const endpoint=n===1?startMember:n===points.length-1?member:null;
+            const horizontal=a.y===b.y,half=endpoint?7:2;
+            let x1=Math.min(a.x,b.x)-(horizontal?2:half),x2=Math.max(a.x,b.x)+(horizontal?2:half);
+            let y1=Math.min(a.y,b.y)-(horizontal?half:2),y2=Math.max(a.y,b.y)+(horizontal?(endpoint?10:2):2);
+            length+=Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+            for(let y=Math.max(0,y1);y<=Math.min(rows-1,y2);y++)for(let x=Math.max(0,x1);x<=Math.min(cols-1,x2);x++)route.add(at(x,y));
           }
+          if([...route].some(i=>forbidden.has(i)&&!occupied.has(i)))return;
+          const score=route.size+length+(points.length-2)*80;
+          if(!best||score<best.score)best={cells:route,score,filled:true};
+        };
+        // Try one- and two-turn routes first, scoring length and bend count.
+        for(const anchor of members.slice(0,memberIndex)){
+          const start=center(anchor);
+          consider([start,{x:target.x,y:start.y},target],anchor);
+          consider([start,{x:start.x,y:target.y},target],anchor);
+          for(let x=0;x<cols;x++)consider([start,{x,y:start.y},{x,y:target.y},target],anchor);
+          for(let y=0;y<rows;y++)consider([start,{x:start.x,y},{x:target.x,y},target],anchor);
         }
-        if(reached>=0){const route=new Set();for(let i=reached;i>=0;i=previous[i])route.add(i);for(const i of expand(route,3))if(!forbidden.has(i)){occupied.add(i);connected.add(i)}}
+        if(!best){
+          const previous=new Int32Array(size).fill(-2),queue=[];
+          for(const i of connected){previous[i]=-1;queue.push(i)}
+          let reached=-1;
+          for(let head=0;head<queue.length&&reached<0;head++){
+            const i=queue[head];if(targets.has(i)){reached=i;break}const x=i%cols,y=Math.floor(i/cols);
+            for(const j of [x>0?i-1:-1,x<cols-1?i+1:-1,y>0?i-cols:-1,y<rows-1?i+cols:-1])if(j>=0&&previous[j]===-2&&(!blocked.has(j)||occupied.has(j))){previous[j]=i;queue.push(j)}
+          }
+          if(reached>=0){const cells=new Set();for(let i=reached;i>=0;i=previous[i])cells.add(i);best={cells};}
+        }
+        if(best)for(const i of (best.filled?best.cells:expand(best.cells,2)))if(!forbidden.has(i)){occupied.add(i);connected.add(i)}
         for(const i of targets)connected.add(i);
       }
       masks.push(occupied);
-      if(index===0)expandFirst=expand(occupied,5);
     }
     const outlines=masks.map(mask=>{
       const edges=new Map(),add=(a,b)=>{const key=a.join(',');if(!edges.has(key))edges.set(key,[]);edges.get(key).push(b)};
@@ -205,7 +213,7 @@
       while(edges.size){const start=edges.keys().next().value;let key=start;const points=[];for(let guard=0;guard<size*8;guard++){const [x,y]=key.split(',').map(Number);points.push({x:8+x*step,y:8+y*step});const choices=edges.get(key);if(!choices?.length)break;const next=choices.pop();if(!choices.length)edges.delete(key);key=next.join(',');if(key===start)break}if(points.length>2){const corners=points.filter((p,i)=>{const a=points[(i+points.length-1)%points.length],b=points[(i+1)%points.length];return(a.x-p.x)*(b.y-p.y)!==(a.y-p.y)*(b.x-p.x)});loops.push(roundedPath(corners,8))}}
       return{path:loops.join(' ')};
     });
-    return order[0]===0?outlines:[outlines[1],outlines[0]];
+    return originalGroups.map((_,index)=>outlines[order.indexOf(index)]||null);
   }
 
   function boundaryMarkup(index=0,separated=null){
