@@ -138,7 +138,11 @@
   // Build independent outlines on a shared grid. Corridors detour around
   // other people and the first outline instead of crossing them diagonally.
   function separatedBoundaries(){
-    const groups=[state.cohabitMemberIds||[],state.cohabitSecondMemberIds||[]].map(ids=>state.people.filter(p=>ids.includes(p.id)));
+    const originalGroups=[state.cohabitMemberIds||[],state.cohabitSecondMemberIds||[]].map(ids=>state.people.filter(p=>ids.includes(p.id)));
+    // Reserve the compact group first, independent of its number or color.
+    const area=members=>members.length?(Math.max(...members.map(p=>p.x))-Math.min(...members.map(p=>p.x))+128)*(Math.max(...members.map(p=>p.y))-Math.min(...members.map(p=>p.y))+160):0;
+    const order=[0,1].sort((a,b)=>area(originalGroups[a])-area(originalGroups[b]));
+    const groups=order.map(index=>originalGroups[index]);
     if(groups.some(group=>!group.length)||groups[0].some(p=>groups[1].some(q=>q.id===p.id)))return null;
     const step=8,cols=148,rows=88,size=cols*rows,at=(x,y)=>y*cols+x;
     const cellPoint=i=>({x:8+(i%cols+.5)*step,y:8+(Math.floor(i/cols)+.5)*step});
@@ -148,7 +152,10 @@
     for(let index=0;index<2;index++){
       const members=groups[index],memberIds=new Set(members.map(p=>p.id)),foreign=state.people.filter(p=>!memberIds.has(p.id));
       // Leave room for both the other group's outline and a visible gap.
-      const forbidden=rectangles(foreign,96,104,120);
+      // A completed group is one obstacle. Separate member obstacles would
+      // leave tiny steps at the bottom of an otherwise rectangular outline.
+      const obstacles=index===1?foreign.filter(p=>!groups[0].some(q=>q.id===p.id)):foreign;
+      const forbidden=rectangles(obstacles,96,104,120);
       if(index===1)for(const i of expand(masks[0],2))forbidden.add(i);
       const occupied=rectangles(members),connected=rectangles([members[0]]);
       // Prefer one clean rounded rectangle when it can enclose this group safely.
@@ -156,8 +163,21 @@
       const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
       for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++)box.add(at(x,y));
       if(![...box].some(i=>forbidden.has(i))){for(const i of box){occupied.add(i);connected.add(i)}}
+      else {
+        // Fill the group's bounding rectangle, cutting out only obstacles.
+        // This produces a broad, clean L rather than narrow stepped corridors.
+        const candidate=new Set([...box].filter(i=>!forbidden.has(i)||occupied.has(i)));
+        const start=occupied.values().next().value,component=new Set([start]),queue=[start];
+        for(let head=0;head<queue.length;head++){
+          const i=queue[head],x=i%cols,y=Math.floor(i/cols);
+          for(const j of [x>0?i-1:-1,x<cols-1?i+1:-1,y>0?i-cols:-1,y<rows-1?i+cols:-1])if(candidate.has(j)&&!component.has(j)){component.add(j);queue.push(j)}
+        }
+        if([...occupied].every(i=>component.has(i))){for(const i of component){occupied.add(i);connected.add(i)}}
+      }
       for(const member of members.slice(1)){
-        const targets=rectangles([member]),previous=new Int32Array(size).fill(-2),queue=[];
+        const targets=rectangles([member]);
+        if([...targets].every(i=>connected.has(i)))continue;
+        const previous=new Int32Array(size).fill(-2),queue=[];
         for(const i of connected){previous[i]=-1;queue.push(i)}
         let reached=-1;
         for(let head=0;head<queue.length&&reached<0;head++){
@@ -178,13 +198,14 @@
       masks.push(occupied);
       if(index===0)expandFirst=expand(occupied,5);
     }
-    return masks.map(mask=>{
+    const outlines=masks.map(mask=>{
       const edges=new Map(),add=(a,b)=>{const key=a.join(',');if(!edges.has(key))edges.set(key,[]);edges.get(key).push(b)};
       for(const i of mask){const x=i%cols,y=Math.floor(i/cols);if(y===0||!mask.has(i-cols))add([x,y],[x+1,y]);if(x===cols-1||!mask.has(i+1))add([x+1,y],[x+1,y+1]);if(y===rows-1||!mask.has(i+cols))add([x+1,y+1],[x,y+1]);if(x===0||!mask.has(i-1))add([x,y+1],[x,y])}
       const loops=[];
       while(edges.size){const start=edges.keys().next().value;let key=start;const points=[];for(let guard=0;guard<size*8;guard++){const [x,y]=key.split(',').map(Number);points.push({x:8+x*step,y:8+y*step});const choices=edges.get(key);if(!choices?.length)break;const next=choices.pop();if(!choices.length)edges.delete(key);key=next.join(',');if(key===start)break}if(points.length>2){const corners=points.filter((p,i)=>{const a=points[(i+points.length-1)%points.length],b=points[(i+1)%points.length];return(a.x-p.x)*(b.y-p.y)!==(a.y-p.y)*(b.x-p.x)});loops.push(roundedPath(corners,8))}}
       return{path:loops.join(' ')};
     });
+    return order[0]===0?outlines:[outlines[1],outlines[0]];
   }
 
   function boundaryMarkup(index=0,separated=null){
