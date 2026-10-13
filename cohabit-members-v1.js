@@ -2,7 +2,7 @@
   if(typeof state==='undefined'||typeof els==='undefined'||typeof renderRelations!=='function')return;
   const button=document.querySelector('#cohabitSelectBtn'),bar=document.querySelector('#cohabitSelectionBar'),count=document.querySelector('#cohabitSelectionCount'),create=document.querySelector('#cohabitSelectionCreate'),cancel=document.querySelector('#cohabitSelectionCancel');
   if(!button||!bar)return;
-  const secondButton=document.querySelector('#cohabitSecondSelectBtn');
+  const secondButton=document.querySelector('#cohabitSecondSelectBtn'),addButton=document.querySelector('#cohabitAddBtn');
   const chosen=new Set();let active=false,groupIndex=0;
   const defaultColors=['#33272a','#c9002b'];
   const validColor=(value,fallback)=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value:fallback;
@@ -252,11 +252,15 @@
     secondButton?.classList.toggle('active-tool',active&&groupIndex===1);
     document.querySelector('#cohabitSelectionGuide').textContent=`동거가족 ${groupIndex+1} 구성원을 선택하세요`;
     const groupColors=colors();
+    const filled=[state.cohabitMemberIds.length>0,state.cohabitSecondMemberIds.length>0];
+    filled.forEach((on,index)=>{const control=document.querySelector(`#cohabitGroupControl${index+1}`);if(control)control.hidden=!on});
+    if(addButton){addButton.disabled=filled.every(Boolean);addButton.title=filled.every(Boolean)?'동거가족은 최대 2개까지 추가할 수 있습니다':'';}
     colorInputs.forEach((input,index)=>{if(input)input.value=groupColors[index]});
     [button,secondButton].forEach((control,index)=>{if(control){control.style.color=groupColors[index];control.style.borderColor=groupColors[index]}});
   }
   function stop(){active=false;window.__COHABIT_PICK_MODE__=false;chosen.clear();bar.hidden=true;sync()}
   function start(index){groupIndex=index;if(!state.people.length){toast('먼저 가계도 구성원을 만들어주세요');return}active=true;window.__COHABIT_PICK_MODE__=true;chosen.clear();(state[memberKey()]||[]).forEach(id=>{if(validIds().has(id))chosen.add(id)});bar.hidden=false;sync();toast('동거가족으로 표시할 구성원을 선택하세요')}
+  addButton?.addEventListener('click',()=>{const index=[state.cohabitMemberIds,state.cohabitSecondMemberIds].findIndex(ids=>!ids?.length);if(index<0){toast('동거가족은 최대 2개까지 추가할 수 있습니다');return}start(index)});
   button.addEventListener('click',()=>start(0));
   secondButton?.addEventListener('click',()=>start(1));
   cancel.addEventListener('click',stop);

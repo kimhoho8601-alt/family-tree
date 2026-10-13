@@ -43,7 +43,7 @@
       return;
     }
 
-    if (selectedBoundary && !event.target.closest?.('#cohabitSelectBtn,#cohabitSecondSelectBtn,#cohabitColor1,#cohabitColor2,#cohabitSelectionBar')) {
+    if (selectedBoundary && !event.target.closest?.('#cohabitAddBtn,#cohabitSelectBtn,#cohabitSecondSelectBtn,#cohabitColor1,#cohabitColor2,#cohabitSelectionBar')) {
       clearBoundarySelection();
     }
   }, true);

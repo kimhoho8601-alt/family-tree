@@ -98,7 +98,7 @@
   // the editor-only "동거가족" label from PNG output.
   if (!document.querySelector('script[data-cohabit-delete-output]')) {
     const s = document.createElement('script');
-    s.src = 'cohabit-delete-output-v1.js?v=20261013-2';
+    s.src = 'cohabit-delete-output-v1.js?v=20261013-6';
     s.dataset.cohabitDeleteOutput = 'v1';
     document.body.append(s);
   }
