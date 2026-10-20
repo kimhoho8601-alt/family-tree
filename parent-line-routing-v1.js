@@ -40,6 +40,38 @@
     return `<path class="relation ${type}" d="${path}" fill="none" stroke="${strokeFor(type)}" stroke-width="${type==='close'?6:3}" ${dash}/>`;
   }
 
+  function abuseMarkup(relation, a, b) {
+    const color = ({black:'#000000',red:'#c9002b',blue:'#2563eb'})[relation.color] || '#000000';
+    const dx=b.x-a.x, dy=b.y-a.y, length=Math.hypot(dx,dy);
+    if (length < 1) return '';
+    const ux=dx/length, uy=dy/length, nx=-uy, ny=ux;
+    // Clip to the actual person symbols so arrowheads remain visible in every direction.
+    const radius = p => {
+      const outer = p.role === '대상자' || p.client || p.clientMain;
+      const r = outer ? 35 : 29;
+      return p.gender === 'female' ? r : p.gender === 'unknown' ? (outer ? 35 : 31)/(Math.abs(ux)+Math.abs(uy)) : r/Math.max(Math.abs(ux),Math.abs(uy));
+    };
+    const start=radius(a)+3, end=radius(b)+4;
+    if (length <= start+end+16) return '';
+    const point=(t,o=0)=>({x:a.x+ux*t+nx*o,y:a.y+uy*t+ny*o});
+    const first=point(start), tip=point(length-end), base=point(length-end-10);
+    const line=(p,q)=>`M${p.x} ${p.y} L${q.x} ${q.y}`;
+    const style=`fill:none;stroke:${color};stroke-width:2.5;stroke-linejoin:round`;
+    const neglect=relation.type==='abuse_neglect', sexual=relation.type==='abuse_sexual';
+    const filled=relation.type==='abuse_physical'||sexual;
+    let d=line(first,base);
+    if (!neglect) {
+      const span=length-end-10-start, steps=Math.max(4,Math.floor(span/7));
+      d=`M${first.x} ${first.y}`;
+      for(let i=1;i<steps;i++){const p=point(start+span*i/steps,i%2?5:-5);d+=` L${p.x} ${p.y}`;}
+      d+=` L${base.x} ${base.y}`;
+    }
+    const left={x:base.x+nx*6,y:base.y+ny*6},right={x:base.x-nx*6,y:base.y-ny*6};
+    return `<path class="abuse-line" d="${d}" style="${style}${neglect?';stroke-dasharray:8 6':''}"/>`
+      +(sexual?[-6,6].map(o=>`<path class="abuse-rail" d="${line(point(start,o),point(length-end-10,o))}" style="${style}"/>`).join(''):'')
+      +`<path class="abuse-arrow" d="M${left.x} ${left.y} L${tip.x} ${tip.y} L${right.x} ${right.y}${filled?' Z':''}" style="${style};fill:${filled?color:'none'}"/>`;
+  }
+
   function safeJunctionY(parentY, childY){
     // A child line should always leave the parent generation downward.
     // Keep enough room under the parent symbols and above the child symbols.
@@ -119,7 +151,7 @@
         extra=`<path d="M${mx-7} ${my-12}l14 24${r.type==='divorced'?`M${mx+2} ${my-12}l14 24`:''}" fill="none" stroke="#c9002b" stroke-width="3"/>`;
       }
       const d=`M${a.x} ${a.y} L${b.x} ${b.y}`;
-      return `<g data-relation="${r.id}" class="relation-group">${emotionalMarkup(r.type,a,b,d)}${extra}<path class="relation-hit" d="${d}" fill="none" stroke="transparent" stroke-width="22"/></g>`;
+      return `<g data-relation="${r.id}" class="relation-group">${r.type.startsWith('abuse_') ? abuseMarkup(r,a,b) : emotionalMarkup(r.type,a,b,d)}${extra}<path class="relation-hit" d="${d}" fill="none" stroke="transparent" stroke-width="22"/></g>`;
     }).join('');
 
     els.relations.innerHTML=markup;

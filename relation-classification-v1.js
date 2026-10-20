@@ -1,7 +1,13 @@
 (() => {
   const CORE_TYPES = new Set(['marriage', 'parent', 'separated', 'divorced']);
   const OPTIONAL_TYPES = new Set(['distant', 'close', 'conflict', 'enmeshed', 'cutoff', 'close_conflict']);
+  const ABUSE_TYPES = new Set(['abuse_physical', 'abuse_emotional', 'abuse_sexual', 'abuse_neglect']);
+  const ABUSE_COLORS = {black:'#000000', red:'#c9002b', blue:'#2563eb'};
   const TYPE_META = {
+    abuse_physical: {label:'신체적 학대', group:'abuse', desc:'지그재그 · 채운 화살표'},
+    abuse_emotional: {label:'정서적 학대', group:'abuse', desc:'지그재그 · 빈 화살표'},
+    abuse_sexual: {label:'성학대', group:'abuse', desc:'평행선과 지그재그 · 채운 화살표'},
+    abuse_neglect: {label:'방임 학대', group:'abuse', desc:'점선 · 빈 화살표'},
     marriage: { label: '결혼·부부', short: '부부', group: 'core', desc: '부부·동반자 구조' },
     parent: { label: '부모 → 자녀', short: '부모→자녀', group: 'core', desc: '부모-자녀 하위 구조' },
     separated: { label: '별거', short: '별거', group: 'core', desc: '분리선 1개' },
@@ -74,13 +80,22 @@
       .aq-type-field>span{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
       .quick-relation-tags{display:inline-flex;gap:4px;margin-left:4px}
       #editLineBtn{white-space:nowrap}
+      #lineChoiceDialog{width:min(820px,calc(100vw - 28px))}
+      #lineChoiceDialog .abuse-fields{grid-template-columns:1fr 1fr}
+      #lineChoiceDialog .abuse-fields>label:last-child{grid-column:2;grid-row:1}
+      #lineChoiceDialog .abuse-fields>p{grid-column:1/-1;grid-row:2;margin:0}
+      #lineChoiceDialog .abuse-fields label>span{border:0;padding:0;min-height:0;background:transparent;box-shadow:none;border-radius:0}
+      @media(max-width:600px){#lineChoiceDialog .abuse-fields{grid-template-columns:1fr}#lineChoiceDialog .abuse-fields>label:last-child{grid-column:1;grid-row:3}}
+      .abuse-fields{margin-top:14px;padding-top:12px;border-top:1px solid #eadfe2;display:grid;gap:8px}
+      .abuse-fields[hidden]{display:none}
+      .relation-choice-cards input:focus-visible+span{outline:2px solid #241b1d;outline-offset:3px}
       @media(max-width:720px){.relation-choice-grid{grid-template-columns:1fr}.relation-choice-cards{grid-template-columns:1fr 1fr}.rel-head-tags{justify-content:flex-start}.relation-list-head{display:grid!important}}
       @media(max-width:460px){.relation-choice-cards{grid-template-columns:1fr}}
     `;
     document.head.append(style);
   }
 
-  function coreOptions(includeParent = true) {
+  function coreOptions(includeParent = true, includeAbuse = true) {
     return `
       <optgroup label="기본 관계선 · 필수">
         <option value="marriage">결혼·부부</option>
@@ -95,7 +110,50 @@
         <option value="cutoff">단절·관계 끊김</option>
         <option value="conflict">갈등·적대</option>
         <option value="close_conflict">친밀하지만 갈등</option>
-      </optgroup>`;
+      </optgroup>${includeAbuse ? `<optgroup label="학대 유형">${[...ABUSE_TYPES].map(type => `<option value="${type}">${TYPE_META[type].label}</option>`).join('')}</optgroup>` : ''}`;
+  }
+
+  function abuseFields(prefix) {
+    return `<div id="${prefix}AbuseFields" class="abuse-fields" hidden>
+      <label class="relation-edit-field"><span>학대 관계선 색상</span><select id="${prefix}AbuseColor"><option value="black">검정 (기본)</option><option value="red">빨강</option><option value="blue">파랑</option></select></label>
+      <p class="relation-edit-help">기본색은 검정입니다. 학대 관계선에만 빨강·파랑을 선택할 수 있습니다.</p>
+      <label class="relation-edit-field"><span>학대 방향 · 가해자 → 피해자</span><select id="${prefix}AbuseDirection"><option value="forward">첫 번째 구성원 → 두 번째 구성원</option><option value="reverse">두 번째 구성원 → 첫 번째 구성원</option></select></label>
+    </div>`;
+  }
+
+  function updateAbuseFields(prefix, type) {
+    const fields = document.querySelector(`#${prefix}AbuseFields`);
+    if (!fields) return;
+    fields.hidden = !ABUSE_TYPES.has(type);
+    fields.querySelectorAll('select').forEach(select => select.disabled = fields.hidden);
+    let from, to;
+    if (prefix === 'popup' && pendingConnection) ({from,to} = pendingConnection);
+    if (prefix === 'add') { from = document.querySelector('#relationFrom')?.value; to = document.querySelector('#relationTo')?.value; }
+    if (prefix === 'edit') {
+      const r = state.relations.find(r => r.id === document.querySelector('#editRelationId').value);
+      if (r) ({from,to} = r);
+    }
+    const name = pid => state.people.find(p => p.id === pid)?.name || '구성원';
+    const direction = document.querySelector(`#${prefix}AbuseDirection`);
+    if (from && to) {
+      direction.options[0].textContent = `가해자: ${name(from)} → 피해자: ${name(to)}`;
+      direction.options[1].textContent = `가해자: ${name(to)} → 피해자: ${name(from)}`;
+    }
+  }
+
+  function bindAbuseFields(prefix, root, selector) {
+    const update = () => updateAbuseFields(prefix, root.querySelector(selector + (prefix === 'popup' ? ':checked' : ''))?.value);
+    root.addEventListener('change', update);
+    // Dialogs retain their form state: new connections always start with black.
+    if (prefix !== 'edit') new MutationObserver(() => {
+      const dialog = root.closest('dialog');
+      if (dialog?.open) {
+        document.querySelector(`#${prefix}AbuseColor`).value = 'black';
+        document.querySelector(`#${prefix}AbuseDirection`).value = 'forward';
+        update();
+      }
+    }).observe(root.closest('dialog'), {attributes:true, attributeFilter:['open']});
+    update();
   }
 
   function enhanceLineChoiceDialog() {
@@ -117,7 +175,14 @@
         <p>관계의 질을 추가로 표시할 때만 선택하세요. 기본 관계선과 함께 사용할 수 있습니다.</p>
         <div class="relation-choice-cards">${['close','enmeshed','distant','cutoff','conflict','close_conflict'].map(card).join('')}</div>
       </section>
+      <section class="relation-choice-section abuse" style="grid-column:1/-1">
+        <div class="relation-choice-head"><strong>학대 유형</strong><span class="rel-tag optional">선택</span></div>
+        <p>가해자 → 피해자 방향으로 표시합니다. 기존 기본선·관계 특성과 함께 사용할 수 있습니다.</p>
+        <div class="relation-choice-cards">${[...ABUSE_TYPES].map(card).join('')}</div>
+        ${abuseFields('popup')}
+      </section>
     </div>`;
+    bindAbuseFields('popup', grid, '[name="popupRelationType"]');
     grid.dataset.classified = '1';
   }
 
@@ -128,6 +193,8 @@
     select.innerHTML = coreOptions(true);
     if ([...select.options].some(o => o.value === current)) select.value = current;
     select.dataset.classified = '1';
+    select.closest('label').insertAdjacentHTML('afterend', `<div class="full">${abuseFields('add')}</div>`);
+    bindAbuseFields('add', select.closest('form'), '#relationType');
     const label = select.closest('label');
     if (label && !label.querySelector('.relation-edit-help')) {
       const note = document.createElement('p');
@@ -154,7 +221,7 @@
     document.querySelectorAll('#aqRels .aq-type').forEach(select => {
       if (select.dataset.classified === '1') return;
       const current = select.value;
-      select.innerHTML = coreOptions(false);
+      select.innerHTML = coreOptions(false, false);
       if ([...select.options].some(o => o.value === current)) select.value = current;
       select.dataset.classified = '1';
       const title = select.closest('label')?.querySelector(':scope > span');
@@ -186,6 +253,7 @@
       <input type="hidden" id="editRelationId">
       <div class="relation-pair-card"><b id="editRelationPair">구성원 ↔ 구성원</b><small>두 구성원의 관계를 변경합니다. 부모선은 부모·자녀 방향을 선택하세요.</small></div>
       <label class="relation-edit-field"><span>관계선 종류 <i class="rel-tag core">기본</i><i class="rel-tag optional">선택</i></span><select id="editRelationType">${coreOptions(true)}</select></label>
+      ${abuseFields('edit')}
       <div id="editParentDirectionField" hidden>
         <label class="relation-edit-field"><span>부모 → 자녀 방향</span><select id="editParentDirection" required disabled></select></label>
         <p class="relation-edit-help">부모와 자녀를 확인한 뒤 방향을 선택하세요.</p>
@@ -194,6 +262,7 @@
       <div class="dialog-actions"><button type="button" class="button ghost" id="cancelRelationEdit">취소</button><button type="submit" class="button primary">변경 저장</button></div>
     </form>`;
     document.body.append(dialog);
+    bindAbuseFields('edit', dialog, '#editRelationType');
     document.querySelector('#closeRelationEdit').onclick = () => dialog.close();
     document.querySelector('#cancelRelationEdit').onclick = () => dialog.close();
     document.querySelector('#editRelationType').addEventListener('change', updateParentDirectionField);
@@ -216,6 +285,9 @@
     document.querySelector('#editRelationPair').textContent = `${a?.name || '구성원'} ↔ ${b?.name || '구성원'}`;
     const select = document.querySelector('#editRelationType');
     select.value = relation.type;
+    document.querySelector('#editAbuseColor').value = Object.hasOwn(ABUSE_COLORS, relation.color) ? relation.color : 'black';
+    document.querySelector('#editAbuseDirection').value = 'forward';
+    updateAbuseFields('edit', relation.type);
     const direction = document.querySelector('#editParentDirection');
     const aName = a?.name || '구성원 1';
     const bName = b?.name || '구성원 2';
@@ -232,6 +304,15 @@
     if (!relation) return;
     const nextType = document.querySelector('#editRelationType').value;
     const samePair = r => r.id !== rid && pairMatches(r, relation.from, relation.to);
+
+    if (ABUSE_TYPES.has(nextType)) {
+      const reverse = document.querySelector('#editAbuseDirection').value === 'reverse';
+      const from = reverse ? relation.to : relation.from, to = reverse ? relation.from : relation.to;
+      const duplicate = state.relations.some(r => r.id !== rid && r.type === nextType && r.from === from && r.to === to);
+      if (duplicate) { toast('같은 방향의 학대 유형이 이미 등록되어 있습니다'); return; }
+      relation.from = from; relation.to = to;
+      relation.color = document.querySelector('#editAbuseColor').value;
+    }
 
     if (nextType === 'parent') {
       const direction = document.querySelector('#editParentDirection').value;
@@ -251,6 +332,7 @@
       state.relations = state.relations.filter(r => !(samePair(r) && OPTIONAL_TYPES.has(r.type)));
     }
 
+    if (!ABUSE_TYPES.has(nextType)) delete relation.color;
     relation.type = nextType;
     document.querySelector('#relationEditDialog').close();
     save();
@@ -264,19 +346,22 @@
     const valid = state.relations.filter(r => state.people.some(p => p.id === r.from) && state.people.some(p => p.id === r.to));
     const groups = {
       core: valid.filter(r => CORE_TYPES.has(r.type)),
-      optional: valid.filter(r => !CORE_TYPES.has(r.type))
+      optional: valid.filter(r => !CORE_TYPES.has(r.type) && !ABUSE_TYPES.has(r.type)),
+      abuse: valid.filter(r => ABUSE_TYPES.has(r.type))
     };
 
     const row = r => {
       const a = state.people.find(p => p.id === r.from);
       const b = state.people.find(p => p.id === r.to);
       const meta = TYPE_META[r.type] || { label: r.type, group: typeGroup(r.type) };
-      return `<div class="relation-edit-item" data-relation-row="${r.id}"><div class="relation-item-copy"><b>${escRel(a?.name || '구성원')} → ${escRel(b?.name || '구성원')}</b><small><span class="rel-tag ${meta.group === 'core' ? 'core' : 'optional'}">${meta.group === 'core' ? '기본' : '선택'}</span>${escRel(meta.label)}</small></div><div class="relation-row-actions"><button type="button" data-edit-rel="${r.id}">수정</button><button type="button" class="rel-remove" data-remove-rel="${r.id}" aria-label="연결선 삭제">×</button></div></div>`;
+      return `<div class="relation-edit-item" data-relation-row="${r.id}"><div class="relation-item-copy"><b>${escRel(a?.name || '구성원')} → ${escRel(b?.name || '구성원')}</b><small><span class="rel-tag ${meta.group === 'core' ? 'core' : 'optional'}">${meta.group === 'core' ? '기본' : '선택'}</span>${escRel(meta.label)}${ABUSE_TYPES.has(r.type) ? ' · ' + ({black:'검정',red:'빨강',blue:'파랑'}[r.color] || '검정') : ''}</small></div><div class="relation-row-actions"><button type="button" data-edit-rel="${r.id}">수정</button><button type="button" class="rel-remove" data-remove-rel="${r.id}" aria-label="연결선 삭제">×</button></div></div>`;
     };
 
     list.innerHTML = `
       <section class="relation-group-block core"><div class="relation-group-title"><span><strong>기본 관계선</strong><i class="rel-tag core">필수</i></span><small>${groups.core.length}개</small></div><div class="relation-group-body">${groups.core.length ? groups.core.map(row).join('') : '<p class="relation-group-empty">기본 관계선이 없습니다. 빠른 작성 또는 선 연결로 추가할 수 있습니다.</p>'}</div></section>
       <section class="relation-group-block optional"><div class="relation-group-title"><span><strong>관계 특성</strong><i class="rel-tag optional">선택</i></span><small>${groups.optional.length}개</small></div><div class="relation-group-body">${groups.optional.length ? groups.optional.map(row).join('') : '<p class="relation-group-empty">필요한 경우에만 친밀·갈등·소원 등의 관계 특성을 추가하세요.</p>'}</div><button type="button" class="relation-add-optional" id="addOptionalRelation">＋ 관계 특성 추가</button></section>`;
+
+    list.insertAdjacentHTML('beforeend', `<section class="relation-group-block"><div class="relation-group-title"><strong>학대 유형</strong><small>${groups.abuse.length}개</small></div><div class="relation-group-body">${groups.abuse.length ? groups.abuse.map(row).join('') : '<p class="relation-group-empty">신체·정서·성·방임 학대 관계를 추가할 수 있습니다. 기본색은 검정입니다.</p>'}</div></section>`);
 
     list.querySelectorAll('[data-edit-rel]').forEach(btn => btn.onclick = () => openRelationEditor(btn.dataset.editRel));
     list.querySelectorAll('[data-remove-rel]').forEach(btn => btn.onclick = () => deleteRelation(btn.dataset.removeRel));
@@ -321,7 +406,20 @@
   }
 
   function overrideAddConnection() {
-    addConnection = function(from, to, type) {
+    addConnection = function(from, to, type, options = {}) {
+      if (ABUSE_TYPES.has(type)) {
+        const prefix = document.querySelector('#lineChoiceDialog[open]') ? 'popup' : 'add';
+        const color = options.color || document.querySelector(`#${prefix}AbuseColor`)?.value || 'black';
+        if (!Object.hasOwn(ABUSE_COLORS, color)) return false;
+        const reverse = options.reverse ?? (document.querySelector(`#${prefix}AbuseDirection`)?.value === 'reverse');
+        if (reverse) [from, to] = [to, from];
+        if (from === to || !state.people.some(p => p.id === from) || !state.people.some(p => p.id === to)) return false;
+        if (state.relations.some(r => r.type === type && r.from === from && r.to === to)) {
+          toast('같은 방향의 학대 유형이 이미 등록되어 있습니다'); return false;
+        }
+        state.relations.push({id:id(), from, to, type, color});
+        save(); render(); toast(`${TYPE_META[type].label} 관계선을 추가했습니다`); return true;
+      }
       const samePair = r => pairMatches(r, from, to);
       if (['marriage','separated','divorced'].includes(type)) {
         state.relations = state.relations.filter(r => !(samePair(r) && ['marriage','separated','divorced'].includes(r.type)));
@@ -355,6 +453,12 @@
     render = wrapped;
   }
 
+  document.querySelector('#relationForm').addEventListener('submit', event => {
+    const type = document.querySelector('#relationType').value;
+    if (!ABUSE_TYPES.has(type)) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    if (addConnection(document.querySelector('#relationFrom').value, document.querySelector('#relationTo').value, type)) els.relationDialog.close();
+  }, true);
   injectStyles();
   enhanceLineChoiceDialog();
   enhanceRelationDialog();
